@@ -1,0 +1,18 @@
+#
+# Copyright 2014, NICTA
+#
+# This software may be distributed and modified according to the terms of
+# the BSD 2-Clause license. Note that NO WARRANTY is provided.
+# See "LICENSE_BSD2.txt" for details.
+#
+# @TAG(NICTA_BSD)
+#
+
+config APP_TEST_OS
+    bool "RefOS OS Level Unit Tests"
+    default y
+    depends on LIB_SEL4 && HAVE_LIBC && LIB_REFOS
+    help
+        OS Level Unit tests for RefOS. These tests test that the bottom level RefOS environment
+        is working. If this test fails, then bootloading is likely to fail, and userland tests
+        may fail to even boot at all.

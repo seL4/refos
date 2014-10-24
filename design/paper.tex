@@ -1,0 +1,203 @@
+%
+% Copyright 2014, NICTA
+%
+% This software may be distributed and modified according to the terms of
+% the BSD 2-Clause license. Note that NO WARRANTY is provided.
+% See "LICENSE_BSD2.txt" for details.
+%
+% @TAG(NICTA_BSD)
+%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+% For papers:
+% - use ``article''
+% - remove the \else part of the \iftrue below (and remove the
+%    \iftrue/\fi commands)
+%    \documentclass[a4paper,11pt,twoside,twocolumn]{article}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%    
+%    For technical reports, manuals etc:
+%    - use ``report''
+%    - use the \else part of the \iftrue below (and remove the \iftrue/fi commands
+%    Use ``report'' for techreports, manuals etc and use \else part of \iffalse
+%    and also uncomment the \usepackage{disy}
+
+\documentclass[a4paper,11pt,twoside]{report}
+\usepackage[colour,nictaonly]{disy}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\usepackage{msctexen}
+
+%%% $Id: paper.tex,v 1.22 2008-07-19 08:14:55 gernot Exp $
+
+% Setting this to true turns on the ``draft'' watermark
+\newif \ifDraft         \Drafttrue
+
+%%% Hyperlinks embed links for references in the PDF output (both for
+%%% internal as well as external links).
+\newif \ifhyperlinks    \hyperlinkstrue
+%%% When using this you should use \autoref{label} instead of
+%%% Section~\ref{label}. This will make ``Section'' part of the link, not
+%%% just the number.
+
+% Easy control over page margins. You can use ``right'', ``top'', ...
+\usepackage[margin=25mm]{geometry}
+% \usepackage[margin=25mm,left=33mm]{geometry}	% better for double-sided reports
+\usepackage{xspace} 
+\usepackage{graphicx}
+\setkeys{Gin}{keepaspectratio=true,clip=true,draft=false,width=\linewidth}
+\usepackage{times,cite,url,fancyhdr}
+\urlstyle{rm}
+\renewcommand{\ttdefault}{cmtt}	% CM rather than courier for \tt
+
+\ifDraft
+\usepackage{draftcopy}
+\newcommand{\Comment}[1]{\textbf{\textsl{#1}}}
+\newcommand{\FIXME}[1]{\textbf{\textsl{FIXME: #1}}}
+\date{\small$\relax$Id: paper.tex,v 1.22 2008-07-19 08:14:55 gernot Exp $\relax$}
+\else
+\newcommand{\Comment}[1]{\relax}
+\newcommand{\FIXME}[1]{\relax}
+\date{}
+\fi
+
+\ifhyperlinks
+\usepackage[pdftex,pagebackref,hyperindex,bookmarks]{hyperref}
+\hypersetup{linktocpage,colorlinks}
+\else   
+\providecommand{\href}[2]{\url{#2}}
+\fi
+
+\pagestyle{fancyplain}
+\lhead[\fancyplain{}{\sl\thepage}]{\fancyplain{}{\sl\rightmark}}
+\chead{}
+\rhead[\fancyplain{}{\sl\leftmark}]{\fancyplain{}{\sl\thepage}}
+\lfoot[\fancyplain{\sl\thepage}{}]{}
+\cfoot{}
+\rfoot[]{\fancyplain{\sl\thepage}{}}
+
+\newcommand{\ty}[1]{\texttt{#1}}
+
+\begin{document}
+
+\ifhyperlinks
+
+%% Capitalisation of cross references
+\renewcommand{\chapterautorefname}{Chapter}
+\renewcommand{\sectionautorefname}{Section}
+\renewcommand{\subsectionautorefname}{Section}
+\renewcommand{\subsubsectionautorefname}{Section}
+\renewcommand{\appendixautorefname}{Appendix}
+\renewcommand{\Hfootnoteautorefname}{Footnote}
+
+%% Commands for index
+\newcommand{\Htextbf}[1]{\textbf{\hyperpage{#1}}}
+\fi
+
+%% Custom Colours
+\definecolor{refos_purple}{RGB}{163, 73, 164}
+\definecolor{refos_dpurple}{RGB}{72, 12, 68}
+\definecolor{refos_dgray}{RGB}{64, 64, 64}
+\definecolor{seL4_green}{RGB}{0, 64, 0}
+
+%% Custom commands
+\newcommand{\refOS}{\textcolor{refos_purple}{\texttt{RefOS}}\xspace}
+\newcommand{\Lf}{\texttt{L4}\xspace}
+\newcommand{\seLf}{\textcolor{seL4_green}{\texttt{seL4}}\xspace}
+
+\title {
+    \centering\includegraphics[width=0.5\textwidth]{refos} \\\
+    RefOS --- Reference Design For A Microkernel Based Operating System
+}
+
+\author {Kevin Elphinstone, Andi Cheng and Xi Chen}
+\AuthorEmail {
+    Kevin.Elphinstone@nicta.com.au,
+    Andi.Cheng@nicta.com.au,
+    XiMa.Chen@nicta.com.au
+}
+\date{\today}
+
+\begin{titlepage}
+\maketitle
+\end{titlepage}
+
+\urlstyle{sf}
+\thispagestyle{empty}
+
+\begin{abstract}
+  \pagenumbering{roman}
+
+  The design of a multi-server operating system is crucial to its efficiency, security and
+  dependability. Increasing usage of embedded systems and microcontroller chips has increased the
+  interest from both industrial and academic communities in microkernel-based component-based
+  software systems. This has resulted in heightened interest in developing better systems and more
+  advanced microkernels.
+  
+  This document outlines a basic reference design for system components and interfaces for an
+  operating system. The protocols have been designed with an \Lf like microkernel in mind, assuming
+  functionality such as inter-thread IPC messaging, capability-based access models, virtual memory
+  support, and so forth. The reference design aims towards standardising the protocols for tasks
+  often required to build a system such as sharing, virtual memory management, and naming. Operating
+  systems may implement these protocols and / or extend it to incorporate more features.
+
+  A sample implementation of the protocol is provided, in the form of a simple OS able to run simple
+  client programs. The sample implementation uses the \seLf microkernel, adding an extra dimension
+  of dependability.
+
+  \vfill
+  
+  \noindent
+  \copyright~2014 NICTA
+\end{abstract}
+\setcounter{page}{1}
+
+
+\tableofcontents
+
+\setcounter{page}{1}
+\pagenumbering{arabic}
+
+\newcommand{\srv}[1]{\textcolor{refos_dpurple}{\texttt{#1}}}
+\newcommand{\obj}[1]{\texttt{#1}}
+\newcommand{\cp}[2]{\textcolor{refos_dpurple}{\srv{#1}\texttt{\_}\obj{#2}\texttt{\_C}}}
+\newcommand{\met}[3]{\cp{#1}{#2}{\texttt{.#3}}}
+\newcommand{\pro}[4]{
+    \met{#1}{#2}{#3} \\
+    $\Rightarrow$ \textcolor{refos_dgray}{\texttt{#4}} \\
+}
+
+\chapter{Introduction}
+\label{s:intro}
+\input{intro}
+
+\chapter{Interfaces}
+\label{s:interface}
+\input{interface}
+
+\chapter{Message Protocol}
+\label{s:protocolip}
+\input{protocol}
+
+\chapter{Implementation Notes}
+\label{s:implementation}
+\input{implementation}
+
+\chapter{\label{s:concl}Conclusions}
+
+We have presented a reference design for a multi-server OS designed for an \texttt{L4} based
+microkernel. We have outlined a set of minimal design abstractions and methodologies which state
+a standard protocol for common tasks, and provided sample message sequences.
+On top of this, we provide a documented sample implementation of this protocol, in the form of a
+small OS.
+
+%\cleardoublepage
+%\bibliographystyle{alpha}
+%\bibliography{extra}
+
+%%%%%%%%%%%% END REPORTS %%%%%%%%%%%%
+\end{document}
+
+% 
+%%% Local Variables: %%%
+%%% ispell-local-dictionary: "british" %%%
+%%% End: %%%

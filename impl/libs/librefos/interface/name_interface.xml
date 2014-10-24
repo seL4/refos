@@ -1,0 +1,73 @@
+<?xml version="1.0" ?>
+
+<!--
+     Copyright 2014, NICTA
+
+     This software may be distributed and modified according to the terms of
+     the BSD 2-Clause license. Note that NO WARRANTY is provided.
+     See "LICENSE_BSD2.txt" for details.
+
+     @TAG(NICTA_BSD)
+  -->
+
+<interface label_min='NAMESERV_METHODS_BASE' connect_ep='0'>
+    <include>refos/refos.h</include>
+    <include>refos/vmlayout.h</include>
+
+    <function name="nsv_register" return='refos_err_t'>
+        ! @brief Register as a server under the given name so clients can find us.
+
+        Servers need to create an endpoint and call this on the process server, in order for clients
+        to be able to find this server and to connect to it. The anon cap will be given to clients
+        looking for this server, and the client will make its connection call through the anon cap
+        to establish a session.
+ 
+        Re-registering will replace the current server anon cap.
+
+        @param nameserv The name server to register onto.
+        @param name String containing name to register under. (No ownership)
+        @param ep The anonymous endpoint cap to register with.
+        @return ESUCCESS on success, refos_err_t error code otherwise.
+
+        <param type="seL4_CPtr" name="nameserv" mode="connect_ep"/>
+        <param type="char*" name="name"/>
+        <param type="seL4_CPtr" name="ep"/>
+    </function>
+
+    <function name="nsv_unregister" return='refos_err_t'>
+        ! @brief Unregister as a server.
+
+        Unregister as a server under given name, so clients are no longer able to find us
+        under that name. Existing anon caps will be invalidated.
+
+        @param nameserv The name server to unregister from.
+        @param name String containing name to unregister for.
+        @return ESUCCESS on success, refos_err_t error code otherwise.
+
+        <param type="seL4_CPtr" name="nameserv" mode="connect_ep"/>
+        <param type="char*" name="name"/>
+    </function>
+
+    <function name="nsv_resolve_segment_internal" return='seL4_CPtr'>
+        ! @brief Resolve the next segment of the given path at the given nameserv.
+
+        Gives back an anon cap if the server is found. For details regarding the anon cap, refer to
+        the documentation under nsv_register(). This function resolves a part of the name, returned
+        as offset into the string that has been resolved. The rest of the path string may be
+        resolved by another dataspace, and so forth, until we get to the end containing the endpoint
+        to the server that actually contains the file. This allows for a simple hierachical
+        namespace with distributed naming.
+
+        @param nameserv The name server to resolve with.
+        @param path The path to resolve.
+        @param[out] resolvedBytes Output containing number of bytes resolved.
+        @param errno Outut error code, if an error occured.
+        @return 0 on error, anon capability to next name server on success.
+
+        <param type="seL4_CPtr" name="nameserv" mode="connect_ep"/>
+        <param type="char*" name="path"/>
+        <param type="int*" name="resolvedBytes" dir="out"/>
+        <param type="refos_err_t*" name="errno" dir="out"/>
+    </function>
+
+</interface>

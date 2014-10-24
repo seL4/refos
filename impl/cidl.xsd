@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+  <xs:element name="interface">
+  <xs:complexType>
+  
+      <xs:sequence>
+        <xs:element type="xs:string" name="include" maxOccurs="unbounded" minOccurs="0"/>
+
+        <xs:element name="function" maxOccurs="unbounded" minOccurs="0">
+        <xs:complexType mixed="true">
+
+            <xs:sequence>
+              <xs:element name="param" maxOccurs="unbounded" minOccurs="0">
+                <xs:complexType>
+                  <xs:simpleContent>
+                  
+                    <xs:extension base="xs:string">
+                    
+                      <xs:attribute type="xs:string" name="type" use="required">
+
+                      <xs:attribute type="xs:string" name="name" use="required"/>
+                      
+                      <xs:attribute name="mode" use="optional">
+                        <xs:simpleType>
+                        <xs:restriction base="xs:string">
+                          <xs:pattern value="(array|length|connect_ep)"/>
+                        </xs:restriction>
+                        </xs:simpleType>
+                      </xs:attribute>
+                      
+                      <xs:attribute name="dir" use="optional" default="in">
+                        <xs:simpleType>
+                        <xs:restriction base="xs:string">
+                          <xs:pattern value="(in|out)"/>
+                        </xs:restriction>
+                        </xs:simpleType>
+                      </xs:attribute>
+                      
+                      <xs:attribute type="xs:string" name="lenvar" use="optional"/>
+                      
+                    </xs:extension>
+                    
+                  </xs:simpleContent>
+                </xs:complexType>
+              </xs:element>
+
+            </xs:sequence>
+
+        <xs:attribute type="xs:string" name="name" use="required"/>
+        <xs:attribute type="xs:string" name="return" use="required"/>
+        </xs:complexType>
+        </xs:element>
+      </xs:sequence>
+
+  <xs:attribute type="xs:string" name="label_min" use="required"/>
+  <xs:attribute type="xs:string" name="connect_ep" use="optional" default=""/>
+  </xs:complexType>
+  </xs:element>
+
+</xs:schema>

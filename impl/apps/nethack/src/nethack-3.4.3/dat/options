@@ -1,0 +1,19 @@
+
+    NetHack version 3.4.3
+
+Options compiled into this edition:
+
+    color, data file compression, debug mode, Elbereth,
+    experience points on status line,
+    insurance files for recovering from crashes, Keystone Kops, log file,
+    mail daemon, news file, redo command, rogue level, saddles and riding,
+    screen clipping, seduction, shell command, sinks, suspend command,
+    terminal info library, tourists, walled mazes,
+    save and bones files accepted from versions 3.4.0 through 3.4.3,
+    basic NetHack features.
+
+Supported windowing systems:
+
+    traditional tty-based graphics,
+    with a default of tty.
+

@@ -1,0 +1,8 @@
+body, table, div, p, dl {
+    font-size: 12px;
+}
+
+.memproto {
+    background-image: none; 
+    padding: 1px 0px;
+}

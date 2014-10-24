@@ -1,0 +1,43 @@
+#
+# Copyright 2014, NICTA
+#
+# This software may be distributed and modified according to the terms of
+# the BSD 2-Clause license. Note that NO WARRANTY is provided.
+# See "LICENSE_BSD2.txt" for details.
+#
+# @TAG(NICTA_BSD)
+#
+
+menuconfig APP_PROCESS_SERVER
+    bool "RefOS Process Server"
+    default y
+    depends on LIB_SEL4 && LIB_CPIO && LIB_REFOS 
+    select HAVE_SEL4_APPS
+    help
+        RefOS Process Server application, which runs as the initial root task of the
+        entire system. The process server is a trusted component; its responsible for starting
+        and managing processes and threads, and hands the right capabilities to the right processes.
+        The process server is required for the system to start.
+
+config PROCSERV_INITIAL_MEM_SIZE
+    int "Initial memory pool size"
+    default 196608
+    depends on APP_PROCESS_SERVER
+    help
+        Initial process server allocator memory pool. In order to solve cyclic allocation dependency
+        problems, the allocator requires a static pre-allocated pool of memory in order to function.
+        If this is set too high, too much memory will be reserved for book keeping and not enough
+        RAM is left to be used to useful stuff. If this is set too low, the allocator runs out of
+        memory to book keep the allocated objects, and starts failing object allocation before all
+        the available RAM is used up.
+
+config PROCSERV_MAX_VSPACES
+    int "Max number of available page directories."
+    default 64
+    depends on APP_PROCESS_SERVER
+    help
+        Number of available statically allocated page directory objects. This is done to avoid
+        allocator fragmentation, as kernel PD objects are quite big. They can easily fail to
+        allocate if allocated dynamically. This number inheritly also limits the maximum number of
+        processes available at once in the system. The actual number of processes available is
+        MIN(PROCSERV_MAX_VSPACES, PROCSERV_MAX_PROCESSES).

@@ -1,0 +1,54 @@
+%!TEX encoding = UTF-8 Unicode
+
+% This program is free software; you can redistribute it and/or
+% modify it under the terms of the GNU General Public License
+% as published by the Free Software Foundation; either version 2
+% of the License, or (at your option) any later version.
+%
+% This program is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+% GNU General Public License for more details.
+%
+% You should have received a copy of the GNU General Public License
+% along with this program; if not, write to the Free Software
+% Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+%
+% Author: Andrzej Lichnerowicz (angelo@irc.pl)
+% This code is based on http://www.imada.sdu.dk/~ehmsen/python.sty
+
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{msctexen}[2010/11/18 v0.1 Embed Mscgen in LaTeX]
+\RequirePackage{keyval}
+\RequirePackage{graphicx}
+
+% Note: shell-escape needs to be activated for mscgen to work.
+% (epstopdf still works, so you'll get missing input file error)
+% This can either be done by passing -shell-escape as an option to
+% latex, by adding/changing "shell_escape = t" in your texmf.cnf
+% For details on Mscgen syntax see http://www.mcternan.me.uk/mscgen/
+
+\newwrite\@out
+\newcommand{\mscwidth}{\linewidth}
+\begingroup \catcode `|=0 \catcode `[=1
+\catcode`]=2 \catcode `\{=12 \catcode `\}=12
+\catcode`\\=12 |gdef|@xmsc#1\end{msc}[|immediate|write|@out[#1]|end[msc]]
+|endgroup
+\define@key{msc}{width}{\def\msc@width{#1}}
+\def\msc{\kernel@ifnextchar [{\@msc}{\@msc[]}}
+\newcounter{msc@codenum}
+\def\@msc[#1]{%
+\let\msc@width=\mscwidth
+\setkeys{msc}{#1}\stepcounter{msc@codenum}
+\gdef\mscfname{msc/\jobname-\themsc@codenum}
+\immediate\openout\@out=\mscfname.mscg
+\newlinechar='15
+\begingroup \catcode`\^^M=12 %
+\let\do\@makeother\dospecials\obeyspaces%
+\@xmsc}
+\def\endmsc{%
+\endgroup
+\immediate\closeout\@out
+\immediate\write18{mscgen -T eps -i \mscfname.mscg -o \mscfname.eps >\mscfname.out 2> \mscfname.err}
+\immediate\write18{epstopdf \mscfname.eps}
+{\includegraphics[width=\msc@width]{\mscfname}}}

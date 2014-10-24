@@ -1,0 +1,428 @@
+%
+% Copyright 2014, NICTA
+%
+% This software may be distributed and modified according to the terms of
+% the BSD 2-Clause license. Note that NO WARRANTY is provided.
+% See "LICENSE_BSD2.txt" for details.
+%
+% @TAG(NICTA_BSD)
+%
+
+This chapter will provide the interfaces which make up the \refOS protocol. These interfaces will
+set the language with which components in the system will then interact. An interface will also aim
+to provide the abstraction to manage conceptual objects, such as a process or a file or a device.
+
+Implementations may choose to extend these interfaces to provide any extra system functionality, as
+well as attach additional interfaces.
+
+% ----------------------------------------------------------------------
+\section{Objects}
+
+Servers implement interfaces, which provide management (i.e. creation,
+destruction, monitoring, sharing, manipulation) object(s). For example, an
+audio device may implement the dataspace interface for UNIX \texttt{/dev/audio},
+which gives the abstraction to manage "audio" objects.
+
+In our sample implementation, the access to an object (i.e. the permission to
+invoke the methods which manage the object) is implemented using a badged
+endpoint capability. The badge number is used to uniquely identify the instance
+of the object. Since most expected implementations of the \refOS protocol will
+use a similar method, the term \texttt{cap} (capability) may be used
+interchangably with \texttt{object}. For example "window cap" means "a
+capability which represents the access to a window object."
+
+Note that in implementations, objects may be merged in some cases. For example, the process
+server's \obj{liveness}, \obj{anon} or \obj{process} object caps may be merged into one for
+simplification.
+
+\begin{description}
+
+	\item[\obj{process}] is an object, most likely maintained by the process
+	server (i.e. \srv{procserv}), which represents a process. If a something
+	has access to a process object, then it has the access to kill that
+	process, call methods on behalf of that process...etc.
+      
+	\item[\obj{liveness}] is an object representing the identity of a process.
+	If something has access to a liveness object of a process, then it can be
+	notified of the process's death can ask for an ID to uniquely identify the
+	process, but cannot kill the process or pretend to be it.
+       
+	\item[\obj{anon}] is an object representing the "address" of a server, used
+	to establish a session connection to the server.
+    
+	\item[\obj{session}] is an object representing an active connection session
+	to a server.  If something has access to a session object, then it can
+	invoke methods on the server on behalf of the session client.
+    
+	\item[\obj{dataspace}] is an object that represents a dataspace. The
+	dataspace itself may represent anything that may be modeled as a series of
+	bytes including devices, RAM or files.  If something has access to a
+	dataspace object, then it may read from / write to / execute it (depending
+	on the dataspace permissions) by mapping a memory window to the dataspace,
+	or close / delete the dataspace.
+      
+	\item[\obj{memwindow}] is an object representing an address space range
+	(i.e. a memory window) segment in a process's virtual memory. If something has
+	access to a memory window object, then it may map it to a dataspace, map a
+	frame into it, and so forth.
+    
+\end{description}
+
+% ----------------------------------------------------------------------
+\section{Methods}
+
+% ------------------
+\subsection{Process Server Interface}
+
+The process server interface aims to provide the abstraction for managing everything to do with a
+process and its threads. This includes management of the process's virtual memory, memory window
+creation / deletion, process creation / deletion, death notification of a client process, thread
+management, and so on. Note that in implementations, the \cp{procserv}{session} may be the same
+capability as \cp{procserv}{process} (in which case the process server would be connectionless).
+It may also be shared with \cp{procserv}{anon} for simplification.
+
+\begin{description}
+	\item \pro{procserv}{session}{watch\_client(\cp{procserv}{liveness}, death\_notify\_ep)} 
+	   {(Errorcode, death\_id, principle\_id)}   
+    Authenticate a new client of a server against the \srv{procserv} and register for death
+    notification.
+    \begin{description}
+        \item [procserv\_liveness\_C] The new client's liveness cap, which they have given to the
+                server through session connection.
+        \item [death\_notify\_ep] The async endpoint through which death notification will happen.
+        \item [death\_id] The unique clientID that server will receive on death notification.
+        \item [principle\_id] Optional, may be used for permission checking.
+    \end{description}
+
+    \item \pro{procserv}{session}{unwatch\_client(\cp{procserv}{liveness})}{(Errorcode)}
+    Stop watching a client and remove death notifications about it.
+
+	\item \pro{procserv}{session}{create\_mem\_window(base\_vaddr, size, permissions, flags)}
+	   {(ErrorCode, \cp{procserv}{window})}
+	Create a new memory window segment for the calling client.
+	Note that clients may only create memory windows for their own address space, and alignment
+	restrictions may apply here due to implementation and/or hardware restrictions. In the \refOS
+    client environment, a valid memory window segment must be covering any virtual address ranges
+    before any mapping can be done (including dataspace \& device frame mappings).
+    \begin{description}
+        \item [base\_vaddr] The window base address in the calling client's VSpace.
+        \item [size] The size of the mem window.
+        \item [permissions] Optional, read / write permission flags.
+        \item [flags] Optional, extra flags bitmask (eg. cached / uncached window).
+    \end{description}
+
+    \item \pro{procserv}{session}{resize\_memory\_window(\cp{procserv}{window}, size)}
+        {ErrorCode}
+    Resize a memory window segment. Optional luxy feature, may be useful for implementing
+    dynamic heap on clients.
+    \begin{description}
+        \item [size] The new size of the mem window to resize to.
+    \end{description}
+
+    \item \pro{procserv}{session}{delete\_memory\_window(\cp{procserv}{window})}
+        {ErrorCode}
+    Delete a memory window segment.
+
+	\item \pro{procserv}{session}{register\_as\_pager(\cp{procserv}{window}, fault\_notify\_ep)} 
+	   {(ErrorCode, window\_id)} 
+    Register to receive faults for the presented window. The returned \ty{window\_id} is an integer
+    used during notification in order for the pager to be able to identify which window faulted.
+    \ty{window\_id} must be unique for each pager, although may also be implemented to be unique
+    across the entire system.
+    \begin{description}
+        \item [fault\_notify\_ep] The async endpoint which the fault notifications will
+                be sent through.
+        \item [window\_id] The uniqie ID of the window, which will be used to identify which window
+                faulted. The server most likely will have to book-keep this ID to handle faults
+                correctly.
+    \end{description}
+
+    \item \pro{procserv}{session}{unregister\_as\_pager(\cp{procserv}{window})}{(ErrorCode)} 
+    Unregister to stop being the pager for a client process's memory window.
+
+	\item \pro{procserv}{session}{window\_map(\cp{procserv}{window}, window\_offset, src\_addr)}
+	   {ErrorCode}
+	This syscall is most commonly used in response to a prior fault notification from the
+    process server. Maps the frame at the given VSpace into the client's faulted window, and
+    then resolves the fault and resumes execution of the faulting client. Also may be used to
+    eagerly map frames into clients before they VMfault there.
+    \begin{description}
+        \item [window\_offset] The offset into the window to map the frame into.
+        \item [src\_addr] The address of the source frame in the calling client process's own
+                VSpace; this address should contain a valid frame, and page-alignment restrictions
+                may apply for this parameter.
+    \end{description}
+	
+	\item \pro{procserv}{session}{new\_proc(name, params, block, priority)}{(ErrorCode, status)}
+	Starts a new process, blocking or non-blocking.
+    \begin{description}
+        \item [name] The executable file name of the process to start.
+        \item [params] The parameters to pass onto the new process.
+        \item [block] Whether to block until the child process exits.
+        \item [priority] The priority of the new child process.
+        \item [status] Output, containint the exit status of the process. Only applicable if
+                       blocking.
+    \end{description}
+
+    \item \pro{procserv}{session}{exit(status)}{(ErrorCode)}
+    Exits and deletes the calling process.
+    \begin{description}
+        \item [status] The exit status of the calling client process.
+    \end{description}
+
+    \item \pro{procserv}{session}{clone(entry, stack, flags, args)}{(ErrorCode, thread\_id)}
+    Starts a new thread, sharing the current client process' address space. The child
+    thread will have the same priority as the parent process.
+    \begin{description}
+        \item [entry] The entry point vaddr of the new thread.
+        \item [stack] The stack vaddr of the new thread.
+        \item [flags] Any thread-related flags.
+        \item [args] Thread arguments.
+        \item [thread\_id] The thread ID of the cloned thread.
+    \end{description}
+
+\end{description}
+
+% ------------------
+\subsection{Server Connection Interface}
+
+The server connection interface provides client session connection and disconnection. It may be a
+good idea during implementation to extend this interface onto any other extra OS functioanlity that
+is common across servers eg. debug ping, parameter buffer setup, notification buffer setup, and so
+forth.
+
+\begin{description}
+
+    \item \pro{serv}{anon}{connect(\cp{procserv}{liveness})}{(ErrorCode, \cp{serv}{session})}
+        Connect to a server and establish a session.
+
+    \item \pro{serv}{session}{disconnect()}{(ErrorCode)}
+        Disconnect from a server and delete session.
+
+\end{description}
+
+% ------------------
+\subsection{Data Server Interface}
+
+The data server interface provides the abstraction for management of dataspaces, including
+creation, access, sharing, manipulation...etc.
+
+\begin{description}
+      
+    \item \pro{dataserv}{session}{open(char *name, flags, mode, size)}
+        {(ErrorCode, \cp{dataserv}{dataspace})}
+    Opens a new dataspace at the dataspace server, which represents a series of bytes. Dataspace
+    mapping methods such as datamap() and init\_data() directly or indirectly maps the contents of
+    this dataspace into a memory window, after which the contents can be read from / written to.
+    The concept of a dataspace in \refOS is similar to a file in UNIX; what a dataspace
+    represents depends on the server that is implementing this interface.
+    \begin{description}
+        \item [name] The name of the dataspace to open.
+        \item [flags] The read / write / create flags.
+        \item [mode] The mode to create new file with, in the case that a new one is created.
+        \item [size] The size of dataspace to open. Note that some data servers may ignore this.
+    \end{description}
+
+    \item \pro{dataserv}{session}{close(\cp{dataserv}{dataspace})}{ErrorCode}
+    Close a dataspace belonging to the data server.
+
+    \item \pro{dataserv}{session}{expand(\cp{dataserv}{dataspace}, size)}{ErrorCode}
+    Resize and expand a given dataspace. Note that some dataspaces may not support this, as
+    sometimes the size of a dataspaces makes no sense (eg. serial input).
+    \begin{description}
+        \item [size] The new size to expand dataspace to.
+    \end{description}
+
+    \item \pro{dataserv}{session}{datamap(\cp{dataserv}{dataspace}, \cp{procserv}{window}, offset)}
+        {ErrorCode}
+    Request that the data server back the specified window with the specified dataspace. Offset is the
+    offset into the dataspace to be mapped to the start of the window. Note: the dataspace has to be
+    provided by the session used to request the backing of the window.
+    \begin{description}
+        \item [procserv\_window\_C] Cap to the memory window to map the dataspace contents into.
+        \item [offset] The offset in bytes from the beginning of the dataspace.
+    \end{description}
+
+    \item \pro{dataserv}{session}{dataunmap(\cp{procserv}{window})}
+        {ErrorCode}
+    Unmap the contents of the data from the given memory window.
+    \begin{description}
+        \item [procserv\_window\_C] Capability to window to unmap dataspace from.
+    \end{description}
+
+    \item \pro{dataserv}{session}{init\_data(\cp{dest}{dataspace}, \cp{dataserv}{dataspace},
+        offset)}{ErrorCode}
+    Initialises another dataspace by the contents of a source dataspace. The source dataspace is
+    where the content is, and must originate from the invoked dataserver. Whether the destination
+    dataspace and the source dataspace coming from the same dataserver is supported is up to the
+    dataserver implementation; the dataserver documentation should be referred to. One example use
+    case for this is a memory manager implementing the dataspace for RAM having a block of ram
+    initialised by an external data source such as a file from a file server.
+    \begin{description}
+        \item [dest\_dataspace\_C] Another dataspace to be initialised with content from the 
+                                 source dataspace.
+        \item [dataserv\_dataspace\_C] The dataserver's own dataspace, where the content is.
+        \item [offset] The content offset into the source dataspace.
+    \end{description}
+
+    \item \pro{dataserv}{session}{have\_data(\cp{dataserv}{dataspace}, fault\_ep)}
+        {ErrorCode, data\_id}
+    The local dataspace server calls another remote dataspace server to have the remote dataspace
+    initalised by the contents of the local dataspace. The local dataspace must book-keep the given
+    data\_id. The remote dataspace then will notify through the given endpoint asking for content
+    initialisation, the dataID being given in the notification.
+    \begin{description}
+        \item [fault\_ep] The async endpoint to ask for content initialisation with.
+        \item [data\_id] The remote endpoint's unique data ID number, used for notification.
+    \end{description}
+
+    \item \pro{dataserv}{session}{unhave\_data(\cp{dataserv}{dataspace})}{ErrorCode}
+    Tell dataserver to stop providing content initialise data for its dataspace.
+
+    \item \pro{dataserv}{session}{provide\_data(\cp{dataserv}{dataspace}, offset, content\_size)}
+        {ErrorCode}  
+    Gives the content from the local dataserver to the remote dataserver, in response to the
+    remote server's earlier notification asking for content. The content is assumed to be in
+    the set up parameter buffer. This call implicitly requires a parameter buffer to be
+    set up, how this is done is up to the implementation.
+    Note that even though the notification from the dataserver asking for content uses dataID to
+    identify which dataspace, the reply, for security reasons, gives the actual dataspace cap.
+    The dataID may be used securely iff the dataserver implementation supports per-client dataID
+    checking, and a version of this method with dataID instead of a cap may be added.
+    \begin{description}
+        \item [offset] The offset into the remote dataspace to provide content for.
+        \item [content\_size] The size of the content.
+    \end{description}
+
+    \item \pro{dataserv}{process}{datashare(\cp{dataserv}{dataspace})}{ErrorCode}
+    Share a dataspace of a dataserver with another process. The exact implementation of this will be
+    context-based. For example, a server sharing a parameter buffer may implement this function as
+    \texttt{share\_param\_buffer(dataspace\_cap)}, implicitly stating the context, and implementing
+    multiple share calls for more contexts. Although this method of stating the sharing context is
+    strongly encouraged, the exact method of passing context is left up to the implementation. \\
+    Note: There are a few assumptions made here.
+    \begin{itemize}
+    \item The dataspace is backed by somebody the receiving process trusts
+        (eg. the process server).
+    \item The dataspace is not revocable so the receiving process does
+        not need to protect itself from an untrusted fault handler on that memory.
+    \end{itemize}
+
+    \item \pro{dataserv}{event}{pagefault\_notify(window\_id, offset, op)}{ErrorCode} \\
+    Send a notification event to a data server indicating which window the fault occurred in,
+    the offset within that window, and operation attempted (either Read or Write).
+
+    \item \pro{dataserv}{event}{initdata\_notify(data\_id, offset)}{ErrorCode} \\
+    Send a notification event to a data server indicating which dataspace needs its initial data.
+
+    \item \pro{dataserv}{event}{death\_notify(death\_id)}{ErrorCode}
+    Send a notification event to a data server indicating a client of
+    theirs has died and the resources associated with them can be cleaned up.
+  
+\end{description}
+
+% ------------------
+\subsection{Name Server Interface}
+
+The name server interface provides a common interface for servers to implement. We have chose a
+simple hierachical distributed naming scheme here, where each server is responsible for a particular
+prefix under another name server. This allows for simple distributed naming while allowing prefix
+caching. A root name server must be defined from which naming starts; in our sample implementation
+the process server acts as the root name server.
+
+\begin{description}
+
+    \item \pro{nameserv}{session}{register(name, \cp{dataserv}{anon})} {ErrorCode} \\
+    Servers need to create an endpoint and call this on the root name server, in order for clients
+    to be able to find this server and to connect to it. The anon cap will be given to clients
+    looking for this server, and the client will make its connection call through the anon cap
+    to establish a session.
+    Re-registering will replace the current server anon cap.
+    \begin{description}
+        \item [name] The name to register under.
+        \item [dataserv\_anon\_C] The anonymous endpoint to register with.
+    \end{description}
+
+    \item \pro{nameserv}{session}{unregister(name)} {ErrorCode} \\
+    Unregister as a server under given name, so clients are no longer able to find us
+    under that name. Existing anon caps will be invalidated.
+    \begin{description}
+        \item [name] The name to unregister for.
+    \end{description}
+
+    \item\pro{nameserv}{session}{resolve\_segment(path)}
+        {(ErrorCode, \cp{dataserv}{anon}, resolved\_bytes)}
+    Gives back an anon cap if the server is found. For details regarding the anon cap, refer to
+    the documentation under register(). This function resolves a part of the name, returned
+    as offset into the string that has been resolved. The rest of the path string may be
+    resolved by another dataspace, and so forth, until we get to the end containing the endpoint
+    to the server that actually contains the file. This allows for a simple hierachical
+    namespace with distributed naming.
+    \begin{description}
+        \item [path] The path to resolve.
+        \item [resolved\_bytes] The number of bytes resolved from start of path string.
+    \end{description}
+
+\end{description}
+
+% ----------------------------------------------------------------------
+\section{Server Components}
+
+RefOS embraces the component-based multi-server OS design. The two main components in our design are
+the process server and the file server. In our sample implementation we included an additoinal OS
+server which is a dataserver responsible for basic device related tasks.
+
+% ------------------
+\subsection{Process Server}
+
+The process server is the most trusted component in the system. It runs as the initial kernel thread
+and does not depend on any other component (this avoids deadlock). The process server implementation
+is single-threaded. The process server also implements the dataspace interface for anonymous memory,
+and acts as the memory manager.
+
+In our implementation, the process server implements the following interfaces:
+\begin{itemize}
+    \item Process server interface. (naming, mem. windows, processes..etc)
+    \item Dataspace server interface. (For anonymous memory)
+    \item Name server interface (In our implementation, acts as the root name server)
+\end{itemize}
+
+% ------------------
+\subsection{File Server}
+
+The file server is more trusted than clients, but less trusted than the process server (avoids
+deadlock). In our current implementation the file server does not use a disk driver, and the actual
+file contents are compiled into the file server executable itself using a pre-compiled archive.
+The file server acts as the main data server in our system.
+
+In our implementation, the file server implements the following interfaces.
+\begin{itemize}
+    \item Dataspace server interface. (for stored file data)
+    \item Server connection interface. (for clients to connect to it)
+\end{itemize}
+
+% ------------------
+\subsection{Console Server}
+
+The Console server provides serial / EGA input \& output functionality, exposed through
+the dataspace interface. It also provides terminal emulation for EGA screen output.
+
+In our implementation, the Console server implements the following interfaces.
+
+\begin{itemize}
+    \item Dataspace server interface. (for serial input / output, and EGA screen devices)
+    \item Server connection interface. (for clients to connect to it)
+\end{itemize}
+
+% ------------------
+\subsection{Timer Server}
+
+The Timer server provides timer gettime \& sleep functionality, exposed through
+the dataspace interface.
+
+In our implementation, the Timer server implements the following interfaces.
+
+\begin{itemize}
+    \item Dataspace server interface. (for timer devices)
+    \item Server connection interface. (for clients to connect to it)
+\end{itemize}

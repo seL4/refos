@@ -1,0 +1,69 @@
+<?xml version="1.0" ?>
+
+<!--
+     Copyright 2014, NICTA
+
+     This software may be distributed and modified according to the terms of
+     the BSD 2-Clause license. Note that NO WARRANTY is provided.
+     See "LICENSE_BSD2.txt" for details.
+
+     @TAG(NICTA_BSD)
+  -->
+
+<interface label_min='SERV_METHODS_BASE' connect_ep='0'>
+    <include>refos/refos.h</include>
+    <include>refos/vmlayout.h</include>
+
+    <function name="serv_connect_direct" return='seL4_CPtr'>
+        ! @brief Connect to a server and establish a session.
+
+        @param serv The anon cap to the server to connect to.
+        @param liveness The calling client's liveness cap.
+        @return The established connection session capability.
+
+        <param type="seL4_CPtr" name="serv" mode="connect_ep"/>
+        <param type="seL4_CPtr" name="liveness"/>
+        <param type="int*" name="errno" dir='out'/>
+    </function>
+
+    <function name="serv_ping" return='refos_err_t'>
+        ! @brief Ping the server. Used to easily test that a connection to the server
+                 is set up correctly, also may be used for keepalive messages.
+
+        @param session The established connection session to send ping along.
+        @return ESUCCESS if success, refos_error error code otherwise.
+
+        <param type="seL4_CPtr" name="session" mode="connect_ep"/>
+    </function>
+
+    <function name="serv_set_param_buffer" return='refos_err_t'>
+        ! @brief Set the parameter buffer for given server.
+
+        Some functions involve large amounts of data transfer, too large and inefficient to be
+        transferred over IPC. In this case, we set up a shared buffer in between the server and the
+        client.
+
+        Note that the server may or may not support setting internal or external dataspaces as the
+        parameter buffer. The user should check with the documentation for the server. An internal
+        dataspace here means that the server is itself a dataserver, and setting the server's own
+        dataspace as the parameter buffer. External here means that the dataspace being used as the
+        parameter buffer here comes from another dataspace server.
+
+        @param session The established connection session to set param buffer for.
+        @param parambuffer_dataspace The dataspace to set as param buffer. May be internal or external.
+        @param parambuffer_size The size of the parameter buffer to set up.
+        @return ESUCCESS if success, refos_error error code otherwise.
+
+        <param type="seL4_CPtr" name="session" mode="connect_ep"/>
+        <param type="seL4_CPtr" name="parambuffer_dataspace"/>
+        <param type="uint32_t" name="parambuffer_size"/>
+    </function>
+
+    <function name="serv_disconnect_direct" return='void'>
+        ! @brief Disconnect from a server.
+        @param session The established connection session to disconnect.
+
+        <param type="seL4_CPtr" name="session" mode="connect_ep"/>
+    </function>
+
+</interface>

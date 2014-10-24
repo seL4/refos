@@ -1,0 +1,51 @@
+#
+# Copyright 2014, NICTA
+#
+# This software may be distributed and modified according to the terms of
+# the BSD 2-Clause license. Note that NO WARRANTY is provided.
+# See "LICENSE_BSD2.txt" for details.
+#
+# @TAG(NICTA_BSD)
+#
+
+# Generated files that are part of the build system.
+impl/build
+impl/images
+impl/stage
+impl/config.mk
+impl/mtoolsrc
+impl/syslinux.cfg
+impl/include/*
+
+# Generated IDL rpc stub files.
+impl/libs/librefos/include/refos-rpc/*_client.h
+impl/libs/librefos/include/refos-rpc/*_server.h
+impl/libs/librefos/src/refos-rpc/*_client.c
+impl/libs/librefos/src/refos-rpc/*_server.c
+impl/libs/librefos/src/refos-rpc/*_dispatcher.c
+
+# Generated design doc files.
+design/msc/*.pdf
+design/msc/*.eps
+design/msc/*.err
+design/msc/*.mscg
+design/msc/*.out
+design/.log
+design/missfont.log
+design/paper.aux
+design/paper.log
+design/paper.out
+design/paper.pdf
+design/paper.toc
+
+# Generated doxygen files.
+impl/docs/html/
+
+# Developer / Editor related files.
+cscope.*
+**/*.swp
+tags
+
+# Kconfig current configuration files.
+impl/.config
+impl/.config.old

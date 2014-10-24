@@ -1,0 +1,42 @@
+#!/bin/bash
+
+#
+# Copyright 2014, NICTA
+#
+# This software may be distributed and modified according to the terms of
+# the BSD 2-Clause license. Note that NO WARRANTY is provided.
+# See "LICENSE_BSD2.txt" for details.
+#
+# @TAG(NICTA_BSD)
+#
+
+libros_xpath='libs/librefos/interface'
+libros_hpath='libs/librefos/include/refos-rpc'
+libros_spath='libs/librefos/src/refos-rpc'
+
+function cidl_libros_interface {    
+    ./cidl_compile -g --client --header $libros_xpath/${1}_interface.xml > $libros_hpath/${1}_client.h || exit 1
+    ./cidl_compile -g --client $libros_xpath/${1}_interface.xml > $libros_spath/${1}_client.c || exit 1
+    ./cidl_compile -g --server --header $libros_xpath/${1}_interface.xml > $libros_hpath/${1}_server.h || exit 1
+    ./cidl_compile -g --server $libros_xpath/${1}_interface.xml > $libros_spath/${1}_server.c || exit 1
+    ./cidl_compile -g --server --dispatcher $libros_xpath/${1}_interface.xml > $libros_spath/${1}_dispatcher.c || exit 1
+}
+
+function clean_libros_interface {
+    rm $libros_hpath/${1}_client.h
+    rm $libros_spath/${1}_client.c
+    rm $libros_hpath/${1}_server.h
+    rm $libros_spath/${1}_server.c
+    rm $libros_spath/${1}_dispatcher.c
+}
+
+if [ $1 == 'make' ]
+then
+    cidl_libros_interface $2
+elif [ $1 == 'clean' ]
+then
+    clean_libros_interface $2
+else
+    echo 'usage: refos_cidl_compile [make|clean] INTERFACE_NAME'
+    exit 1
+fi

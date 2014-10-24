@@ -1,0 +1,38 @@
+#
+# Copyright 2014, NICTA
+#
+# This software may be distributed and modified according to the terms of
+# the BSD 2-Clause license. Note that NO WARRANTY is provided.
+# See "LICENSE_BSD2.txt" for details.
+#
+# @TAG(NICTA_BSD)
+#
+
+config SEL4_LIBS_PATH
+    string
+    option env="SEL4_LIBS_PATH"
+
+menu "seL4 Libraries"
+
+source "$SEL4_LIBS_PATH/libsel4/Kconfig"
+source "$SEL4_LIBS_PATH/elfloader/Kconfig"
+source "$SEL4_LIBS_PATH/libcpio/Kconfig"
+source "$SEL4_LIBS_PATH/libdatastruct/Kconfig"
+source "$SEL4_LIBS_PATH/libelf/Kconfig"
+source "$SEL4_LIBS_PATH/libmuslc/Kconfig"
+source "$SEL4_LIBS_PATH/libsel4allocman/Kconfig"
+source "$SEL4_LIBS_PATH/libsel4muslcsys/Kconfig"
+source "$SEL4_LIBS_PATH/libsel4platsupport/Kconfig"
+source "$SEL4_LIBS_PATH/libsel4simple/Kconfig"
+source "$SEL4_LIBS_PATH/libsel4simple-stable/Kconfig"
+source "$SEL4_LIBS_PATH/libsel4utils/Kconfig"
+source "$SEL4_LIBS_PATH/libsel4vspace/Kconfig"
+source "$SEL4_LIBS_PATH/libsel4vka/Kconfig"
+source "$SEL4_LIBS_PATH/libsel4utils/Kconfig"
+source "$SEL4_LIBS_PATH/librefossys/Kconfig"
+source "$SEL4_LIBS_PATH/librefos/Kconfig"
+source "$SEL4_LIBS_PATH/libutils/Kconfig"
+source "$SEL4_LIBS_PATH/libvterm/Kconfig"
+source "$SEL4_LIBS_PATH/libplatsupport/Kconfig"
+
+endmenu

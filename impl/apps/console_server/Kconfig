@@ -1,0 +1,19 @@
+#
+# Copyright 2014, NICTA
+#
+# This software may be distributed and modified according to the terms of
+# the BSD 2-Clause license. Note that NO WARRANTY is provided.
+# See "LICENSE_BSD2.txt" for details.
+#
+# @TAG(NICTA_BSD)
+#
+
+config APP_CONSOLE_SERVER
+    bool "RefOS Console Server"
+    default y
+    depends on LIB_SEL4 && HAVE_LIBC && LIB_SEL4_PLAT_SUPPORT && LIB_REFOS_SYS
+    select HAVE_SEL4_APPS
+    select APP_PROCESS_SERVER
+    help
+        Low level console server for Refos, which exposes a input/output consoel device
+        for the system.

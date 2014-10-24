@@ -1,0 +1,25 @@
+#
+# Copyright 2014, NICTA
+#
+# This software may be distributed and modified according to the terms of
+# the BSD 2-Clause license. Note that NO WARRANTY is provided.
+# See "LICENSE_BSD2.txt" for details.
+#
+# @TAG(NICTA_BSD)
+#
+
+# This file defines the Kconfig menu structure.
+
+mainmenu "Project Configuration"
+
+menu "seL4 Kernel"
+source "kernel/Kconfig"
+endmenu
+
+config COMMON_PATH
+    string
+    option env="COMMON_PATH"
+
+source libs/Kconfig
+source apps/Kconfig
+source "$COMMON_PATH/Kconfig"

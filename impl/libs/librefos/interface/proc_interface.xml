@@ -1,0 +1,283 @@
+<?xml version="1.0" ?>
+
+<!--
+     Copyright 2014, NICTA
+
+     This software may be distributed and modified according to the terms of
+     the BSD 2-Clause license. Note that NO WARRANTY is provided.
+     See "LICENSE_BSD2.txt" for details.
+
+     @TAG(NICTA_BSD)
+  -->
+
+<interface label_min='PROCSERV_METHODS_BASE' connect_ep='REFOS_PROCSERV_EP'>
+    <include>refos/refos.h</include>
+ 
+    <function name="proc_ping" return='refos_err_t'>
+        ! @brief Ping the process server. Useful for debugging.
+        @return ESUCCESS if success, refos_error error code otherwise.
+    </function>
+
+    <function name="proc_new_endpoint_internal" return='seL4_CPtr'>
+        ! @brief Create a new sync endpoint.
+
+        The client's vspace owns the created endpoint, and the EP will be deleted when the client
+        exits.
+
+        @param errno Variable to store error code in.
+        @return Recieved cap if success, 0 otherwise.
+
+        <param type="refos_err_t*" name="errno" dir="out"/>
+    </function>
+    
+    <function name="proc_new_async_endpoint_internal" return='seL4_CPtr'>
+        ! @brief Create a new asynchronous endpoint.
+
+        The client's vspace owns the created endpoint, and the EP will be deleted when the client
+        exits.
+
+        @param errno Variable to store error code in.
+        @return Recieved cap if success, 0 otherwise.
+
+        <param type="refos_err_t*" name="errno" dir="out"/>
+    </function>
+
+    <function name="proc_watch_client" return='refos_err_t'>
+        ! @brief Watch a client and set up to be notified of its death.
+        @param liveness The liveliness cap of the client.
+        @param deathEP The endpoint through which death notification will happen.
+        @param deathID The deathID which will be passed in the notification.
+        @return ESUCCESS if success, refos_error error code otherwise.
+
+        <param type="seL4_CPtr" name="liveness"/>
+        <param type="seL4_CPtr" name="deathEP"/>
+        <param type="int32_t*" name="deathID" dir="out"/>
+    </function>
+ 
+    <function name="proc_unwatch_client" return='refos_err_t'>
+        ! @brief Stop watching a client and remove death notifications about it.
+
+        @param liveness The liveliness cap of the client.
+        @return ESUCCESS if success, refos_error error code otherwise.
+        
+        <param type="seL4_CPtr" name="liveness"/>
+    </function>
+
+    <function name="proc_create_mem_window_internal" return='seL4_CPtr'>
+        ! @brief Create a new memory window segment.
+
+        Likely to have implementation and/or technical restrictions regarding window base addrs and
+        mapped dataspaces. For the details, looking at the documentation for the implementation is
+        strongly recommended. On error, 0 is returned and errno is set.
+
+        @param vaddr The window base address in the calling client's VSpace.
+        @param size The size of the mem window.
+        @param permissions The read / write permission bitmask.
+        @param permissions The flags bitmask (cached / uncached).
+        @param errno The returned error number, if any errors.
+        @return Capability to created window if success, 0 otherwise (errno will be set).
+                (Gives ownership)
+
+        <param type="uint32_t" name="vaddr"/>
+        <param type="uint32_t" name="size"/>
+        <param type="uint32_t" name="permissions"/>
+        <param type="uint32_t" name="flags"/>
+        <param type="refos_err_t*" name="errno" dir="out"/>
+    </function>
+
+    <function name="proc_resize_mem_window" return='refos_err_t'>
+        ! @brief Resize a memory window segment.
+
+        @param window Capability of the window to resize. (No ownership)
+        @param size The new window size.
+        @return ESUCCESS if success, refos_error error code otherwise.
+
+        <param type="seL4_CPtr" name="window"/>
+        <param type="uint32_t" name="size"/>
+    </function>
+
+    <function name="proc_delete_mem_window" return='refos_err_t'>
+        ! @brief Delete a memory window segment.
+
+        @param window Capability of the window to delete. (Takes ownersip)
+        @return ESUCCESS if success, refos_error error code otherwise.
+
+        <param type="seL4_CPtr" name="window"/>
+    </function>
+
+    <function name="proc_get_mem_window" return='seL4_CPtr'>
+        ! @brief Get the memory window segment in calling client's own vspace at given addr.
+
+        @param vaddr The virtual memory address to get window for.
+        @return Capability to window at the given vaddr.  (Gives ownership)
+
+        <param type="uint32_t" name="vaddr"/>
+    </function>
+
+    <function name="proc_get_mem_window_dspace" return='seL4_CPtr'>
+        ! @brief Get the anonymous dataspace mapped at the given window.
+
+        Get the anonymous dataspace mapped at the given window. This function is very useful to
+        avoid some complex double-book-keeping scenarios.
+
+        @param window The window to get mapped dataspace for. (No ownership)
+        @param errno The returned error number, if any errors.
+        @return 0 if error or no dataspace mapped, capability to the mapped dataspace at the given
+                window otherwise. (Gives ownership)
+
+        <param type="seL4_CPtr" name="window"/>
+        <param type="refos_err_t*" name="errno" dir="out"/>
+    </function>
+
+    <function name="proc_register_as_pager" return='refos_err_t'>
+        ! @brief Register to be the pager for a client process's memory window.
+
+        @param window the memory window to page for.
+        @param faultNotifyEP The async endpoint which the fault notifications will be sent through.
+        @param winID The ID of the window, which will be used to identify which window faulted. The
+                     server most likely will have to book-keep this ID to handle faults correctly.
+        @return ESUCCESS if success, refos_error error code otherwise.
+
+        <param type="seL4_CPtr" name="window"/>
+        <param type="seL4_CPtr" name="faultNotifyEP"/>
+        <param type="seL4_Word*" name="winID" dir="out"/>
+    </function>
+
+    <function name="proc_unregister_as_pager" return='refos_err_t'>
+        ! @brief Unregister to stop being the pager for a client process's memory window.
+        @param window the memory window stop paging for.
+
+        <param type="seL4_CPtr" name="window"/>
+    </function>
+
+    <function name="proc_notification_buffer" return='refos_err_t'>
+        ! @brief Use the given RAM dataspace as the notification buffer.
+
+        The specific implementation of the process server may or may not support notification
+        buffers backed by internal and/or external dataspaces. Referring to the documentation for
+        the process server implementation is strongly recommended in order to find out what kind(s)
+        of dataspaces are supported.
+
+        @param dataspace The dataspace to use as the notification buffer.
+        @return ESUCCESS if success, refos_error error code otherwise.
+
+        <param type="seL4_CPtr" name="dataspace"/>
+    </function>
+
+    <function name="proc_window_map" return='refos_err_t'>
+        ! @brief Map a frame in the dataserver's own VSpace into the faulted window.
+
+        This syscall is most commonly used in response to a prior fault notification from the
+        process server. Maps the frame at the given VSpace into the client's faulted window, and
+        then resolves the fault and resumes execution of the faulting client. Also may be used to
+        eagerly map frames into clients before they VMfault there.
+
+        @param window Cap to the window to map the frame into.
+        @param windowOffset The offset into the window to map the frame into.
+        @param srcAddr The address of the source frame in the calling process's own VSpace;
+               this address should contain a valid frame, and should be page-aligned.
+        @return ESUCCESS if success, refos_error error code otherwise.
+
+        <param type="seL4_CPtr" name="window"/>
+        <param type="uint32_t" name="windowOffset"/>
+        <param type="uint32_t" name="srcAddr"/>
+    </function>
+
+    <function name="proc_window_unmap" return='refos_err_t'>
+    </function>
+
+    <function name="proc_window_getID" return='int'>
+        ! @brief Get the window ID associated with window capability.
+        @param window The window capability to retrieve window ID for.
+        @return -refos_err_t error on error, windowID value otherwise.
+
+        <param type="seL4_CPtr" name="window"/>
+    </function>
+
+    <function name="proc_set_parambuffer" return='refos_err_t'>
+        ! @brief Use the given dataspace as the parameter buffer for process server syscalls.
+
+        Whether internal and/or external dataspaces are supported for use as the parameter buffer is
+        implementation-specific. Referring to the documentation for the process server
+        implementation is strongly recommended in order to find out which type(s) of dataspaces are
+        supported.
+
+        @param dataspace The dataspace to use as the parameter buffer for subsequent procserv
+                         syscalls.
+        @param size The size of the param buffer.
+        @return ESUCCESS if success, refos_error error code otherwise.
+
+        <param type="seL4_CPtr" name="dataspace"/>
+        <param type="uint32_t" name="size"/>
+    </function>
+
+    <function name="proc_new_proc" return='refos_err_t'>
+        ! @brief Runs a new process. 
+
+        Starts a new process, blocking or non-blocking.
+    
+        @param name The executable file name of the process to start.
+        @param params The parameters to pass onto the new process.
+        @param block Whether to block until the process exits. (1/0) (non-blocking unimplemented)
+        @param priority The priority (0-255) of the new process.
+        @param status The exit status of the process. (output, only used if blocking is set)
+        @return ESUCCESS if success, refos_error error code otherwise.
+
+        <param type="char*" name="name"/>
+        <param type="char*" name="params"/>
+        <param type="bool" name="block"/>
+        <param type="int32_t" name="priority"/>
+        <param type="int32_t*" name="status" dir="out"/>
+    </function>
+
+    <function name="proc_exit" return='refos_err_t'>
+        ! @brief Exits and deletes the calling process.
+        @param status The exit status of the process.
+        @return doesn't return.
+        <param type="int32_t" name="status"/>
+    </function>
+
+    <function name="proc_clone_internal" return='int'>
+        ! @brief Clones a new thread for process.
+
+        Starts a new thread, sharing the current process' vspace. Each thread must have its own
+        entry point, stack and IPC buffer (the IPC buffer will be dynamically allocated). The child
+        thread will have the same priority as the parent process.
+
+        @param entryPoint The entry point vaddr of the new thread.
+        @param childStack The stack vaddr of the new thread.
+        @param flags Unused, must be 0.
+        @param arg Unused, must be 0.
+        @param errno The resulting refos_error error code, if an error occured.
+        @return threadID if success, negative if error occured.
+
+        <param type="seL4_Word" name="entryPoint"/>
+        <param type="seL4_Word" name="childStack"/>
+        <param type="int" name="flags"/>
+        <param type="seL4_Word" name="arg"/>
+        <param type="refos_err_t*" name="errno" dir="out"/>
+    </function>
+
+    <function name="proc_nice" return='refos_err_t'>
+        ! @brief Set the given thread's priority.
+
+        @param threadID The thread ID to set priority for.
+        @param priority The priority to set to.
+        @return ESUCCESS if success, refos_error error code otherwise.
+        
+        <param type="int" name="threadID"/>
+        <param type="int" name="priority"/>
+    </function>
+
+    <function name="proc_get_irq_handler" return='seL4_CPtr'>
+        ! @brief Get the IRQ handler endpoint for the given IRQ number. Requires IRQ handler
+                 permission.
+        @param irq The IRQ number to get handler for
+        @return IRQ handler endpoint on success, 0 otherwise.
+        <param type="int" name="irq"/>
+    </function>
+
+</interface>
+
+
+

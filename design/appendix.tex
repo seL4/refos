@@ -1,0 +1,331 @@
+%
+% Copyright 2014, NICTA
+%
+% This software may be distributed and modified according to the terms of
+% the BSD 2-Clause license. Note that NO WARRANTY is provided.
+% See "LICENSE_BSD2.txt" for details.
+%
+% @TAG(NICTA_BSD)
+%
+
+\subsection{Empty frame allocation}
+
+\begin{figure}[htb]
+\begin{center}
+\begin{msc}
+msc {
+    hscale = "1.5";
+
+    R [ label ="Root Server"],
+    C [ label = "Client"];
+    
+    C => R [ label = "rootserver\_clientid\_cap.mk\_map\_window(vaddr, size)"];
+    R >> C [ label = "Reply(SUCCESS, win\_cap)"];
+    C => R [ label = "rootserver\_clientid\_cap.file\_map(\"zero\_fill\", win\_cap)"];
+    R box R [ label = "validate request and allocate win\_id"];
+    R >> C [ label = "Reply(SUCCESS)"];
+    C box C [ label = "touch anywhere in window"];
+    C => R [ label = "rootserver\_clientid\_cap.pagefault(vaddr)"];
+    R box R [ label = "transform into win\_id, offset"];
+    R box R [ label = "found the mem object zero\_fill in itself"];
+    R box R [ label = "allocate new frame and back the content by zero\_fill"];
+    R :> C [ label = "rootserver\_clientid\_Internal.mapframe(frame)"];
+    R >> C [ label = "Reply(SUCCESS)"];
+}
+\end{msc}
+\end{center}
+\caption{Using zero fill to allocate an empty frame.}
+\end{figure}
+
+\subsection{Share a memory object}
+
+\begin{figure}[htb]
+\begin{center}
+\begin{msc}
+msc {
+    hscale = "1.5";
+
+    R [ label ="Root Server"],
+    P [ label = "Pager"],
+    A [ label = "Client A"],
+    B [ label = "Client B"];
+    
+    A box A [ label = "opened some object backed by pager in window A with win\_capA"];
+    --- [ label = "assume A has the cap to talk to the pager and they can talk to each other"];
+    A => P [ label = "pager\_clientAid\_cap.mk\_mobject\_anon\_cap(win\_capA, perm)"];
+    P box P [ label = "validate request"];
+    P >> A [ label = "Reply(SUCCESS, mobject\_anon\_cap)"];
+    A => B [ label = "clientB\_clientAid\_cap.share\_object(mobject\_anon\_cap, win\_size)"];
+    B >> A [ label = "Reply(SUCCESS)"];
+    B box B [ label = "create a new window indicated by win\_capB"];
+    B => P [ label = "mobject\_anon\_cap.object\_share\_init(win\_capB)"];
+    P box P [ label = "validate request and find win\_capA"];
+    P => R [ label = "rootserver\_pagerid\_cap.map\_share\_copy(win\_capA, win\_capB)"];
+    R box R [ label = "find frames win\_capA\_frames mapped to win\_capA and book keep"];
+    R box R [ label = "set up pager information for win\_capB"];
+    R :> B [ label = "rootserver\_clientBid\_Internal.mapframe(win\_capA\_frames)"];
+    R >> P [ label = "Reply(SUCCESS, win\_idB)"];
+    P >> B [ label = "Reply(SUCCESS)"];
+}
+\end{msc}
+\end{center}
+\caption{Protocol for sharing a memory object from client A to client B.}
+\end{figure}
+
+
+\subsection{Shared buffer initialisation in A for argument passing to B}
+
+\begin{figure}[htb]
+\begin{center}
+\begin{msc}
+msc {
+    hscale = "1.5";
+
+    A [ label = "Client A"],
+    B [ label = "Client B"];
+    
+    A box A [ label = "create memory object buffer X"];
+    A box A [ label = "create memory object for start and end index/pointer"];
+    |||;
+    A box B [ label = "share X - read only for B"];
+    A box B [ label = "share end index/pointer - read only for B"];
+    A box B [ label = "share start index/pointer - R/W for B"];
+}
+\end{msc}
+\end{center}
+\caption{TX buffer initialisation.}
+\end{figure}
+
+\subsection{Shared buffer initialisation in A for receiving information from B}
+
+\begin{figure}[htb]
+\begin{center}
+\begin{msc}
+msc {
+    hscale = "1.5";
+
+    A [ label = "Client A"],
+    B [ label = "Client B"];
+    
+    A box A [ label = "create memory object buffer X"];
+    A box A [ label = "create memory object for start and end index/pointer"];
+    |||;
+    A box B [ label = "share X - R/W for B"];
+    A box B [ label = "share end index/pointer - R/W for B"];
+    A box B [ label = "share start index/pointer - R/W for B"];
+}
+\end{msc}
+\end{center}
+\caption{RX buffer initialisation.}
+\end{figure}
+
+\clearpage
+
+Do we need a name server for this?
+
+\subsection{Name registration and query}
+
+\begin{figure}[htb]
+\begin{center}
+\begin{msc}
+msc {
+    hscale = "1.5";
+
+    N [ label ="Name server"],
+    S [ label = "Server"];
+    
+    --- [ label = "registration"];
+    S box S [ label = "create a new memory object with mobject\_cap"];
+    S => N [ label = "nameserver\_serverid\_cap.object\_name\_reg(mobject\_cap, \"mobject\_name\")"];
+    N box N [ label = "internal book keeping"];
+    N >> S [ label = "Reply(SUCCESS)"];
+    |||;
+    --- [ label = "query"];
+    S => N [ label = "nameserver\_serverid\_cap.object\_name\_query(\"mobject\_name\")"];
+    N box N [ label = "find the object according to \"mobject\_name\""];
+    N >> S [ label = "Reply(SUCCESS, mobject\_cap)"];
+}
+\end{msc}
+\end{center}
+\caption{Object name registration and query.}
+\end{figure}
+
+\begin{figure}[htb]
+\begin{center}
+\begin{msc}
+msc {
+    hscale = "1.5";
+
+    N [ label ="Name server"],
+    R [ label = "Root server"];
+    
+    --- [ label = "registration"];
+    R box R [ label = "receive call for server registration with name \"server\_name\""];
+    R -> N [ label = "nameserver\_AsyncEP.server\_name\_reg(\"server\_name\")"];
+    N box N [ label = "internal book keeping and generate server\_id"];
+    N => R [ label = "rootserver\_nameserverid\_cap.name\_reg\_ack(SUCCESS, server\_id)"];
+    R box R [ label = "book keep server\_id with server cap"];
+    R >> N [ label = "Reply(SUCCESS)"];
+    |||;
+    --- [ label = "query"];
+    R box R [ label = "receive call to find server of name \"server\_name\""];
+    R -> N [ label = "nameserver\_AsyncEP.server\_find(\"server\_name\")"];
+    N box N [ label = "find \"server\_name\" with its server\_id"];
+    N => R [ label = "rootserver\_nameserverid\_cap.name\_query\_ack(SUCCESS, server\_id)"];
+    R >> N [ label = "Reply(SUCCESS)"];
+}
+\end{msc}
+\end{center}
+\caption{Server name registration and query.}
+\end{figure}
+\begin{figure}[htb]
+  \begin{center}
+    \begin{msc}
+      msc {
+      	hscale = "1.75";
+      	
+        R [ label ="Root Server"],
+        P [ label = "Pager"],
+        C [ label = "Client"];
+
+        C box C [ label = "touch a page"];
+        C=>R [label = "rootserver\_clientid\_cap.pagefault(vaddr)"];
+        R box R [ label = "page directory access"];
+        --- [ label = "if need swap I/O, otherwise go to NO\_SWAP"];
+        R box R [ label = "check if any vaddr in any window should sit in page at this PDE"];
+        --- [ label = "YES, otherwise go to NO"];
+        R box R [ label = "alloc swap buffer(might need swapping) and write/map victim page"];
+        R->P [ label = "pager\_AsyncEP.notifyfault(win id, offset, op, swap\_vaddr)"];
+        P box P [ label = "write page to storage or find/store page in pager address space"];
+        --- [ label = "if page fault"];
+        P box P [ label = "repeat fault process for this pager"];
+        ...;
+        --- [ label = "otherwise"];
+        P=>R [ label = "rootserver\_pagerid\_cap.map(win\_id, page\_num, offset, perms)"];
+        R box R [ label = "validate message and lookup pager page table for frame"];
+        R>>P [ label = "Reply(SUCCESS)"];
+        R box R [ label = "GO TO STAGE 2"];
+        --- [ label = "NO"];
+        R box R [ label = "handle paging internally"];
+        ...;
+        --- [ label = "NO\_SWAP"];
+        R box R [ label = "page table alloc if new"];
+        --- [ label = "STAGE 2"];
+        R box R [ label = "page table access"];
+        --- [ label = "if need swap I/O, otherwise go to STAGE MAP"];
+        R box R [ label = "check if fault vaddr is in any window"];
+        --- [ label = "YES, otherwise go to NO"];
+        R box R [ label = "alloc swap buffer(might need swapping) and write/map victim page"];
+        R->P [ label = "pager\_AsyncEP.notifyfault(win\_id,offset,op)"];
+        P box P [ label = "write page to storage or find/store page in pager address space"];
+        --- [ label = "if page fault"];
+        P box P [ label = "repeat fault process for this pager"];
+        ...;
+        --- [ label = "otherwise"];
+        P=>R [ label = "rootserver\_pagerid\_cap.map(win\_id, page\_num, offset, perms)"];
+        R box R [ label = "validate message and lookup pager page table for frame"];
+        R>>P [ label = "Reply(SUCCESS)"];
+        R box R [ label = "GO TO STAGE MAP"];
+        --- [ label = "NO"];
+        R box R [ label = "handle paging internally"];
+        ...;
+        --- [ label = "STAGE MAP"];
+        R box R [ label = "frame alloc if new"];
+        R:>C [ label = "rootserver\_clientid\_Internal.mapframe(frame)"];
+        R>>C [ label = "Reply(SUCCESS)"];
+      }
+    \end{msc}
+  \end{center}
+  \caption{More detailed version of page fault.}
+\end{figure}
+
+\begin{description}
+  \item
+  \begin{description}
+  \item[\ty{mk\_mobject\_anon\_cap(win\_cap, perm)}] A method
+    requesting the pager to create an anonymous memory object
+    capability that is already mapped to a specific window. This
+    anonymous capability then can be passed to other process for
+    setting up sharing of the same copy mapped to the window indicated
+    by \ty{win\_cap}. \ty{perm} indicates the permission that the
+    caller client wants other processes to have when they gain access
+    to the copy.
+  \end{description}
+
+\item[\ty{clientB\_clientid\_cap}] A distinguished badged client B cap
+  to identify a client.
+  \begin{description}
+  \item[\ty{share\_object(mobject\_anon\_cap, win\_size)}] A call to
+    client B by another client to share the memory object anonymous
+    capability \ty{mobject\_anon\_cap} so that client B can make
+    further sharing request to pager and indirectly root
+    server. \ty{win\_size} indicates the suggested size of the window
+    that can be used to accommodate the memory object mapping.
+  \end{description}
+
+\item[\ty{mobject\_anon\_cap}] An anonymous badged cap used to start a
+  memory object sharing process. The server which owns the memory
+  object listens to this capability.
+  \begin{description}
+  \item[\ty{object\_share\_init(win\_cap)}] A call to the server that
+    listens to the anonymous capability. It asks the server to set up
+    pager information for this argument \ty{win\_cap} and indicates
+    that the caller wants to gain access to the copy of this object
+    that is mapped to another window. The server will then find the
+    window which has the object mapped and pass it to the root server
+    along with the argument \ty{win\_cap} for further actions.
+  \end{description}
+
+\item[\ty{rootserver\_pagerid\_cap}] A distinguished badged root
+  server cap to identify a pager.
+  \begin{description}
+  \item[\ty{map\_share\_copy(win\_capA, win\_capB)}] A call to the
+    root server from a pager for mapping the mapped frame to another
+    process again in order to create the shared state. Root server
+    finds the frames mapped to the window indicated by ty{win\_capA}
+    and maps them again to the window indicated by ty{win\_capB}. It
+    also performs pager registration of the caller pager to the window
+    indicated by \ty{win\_capB}.
+  \end{description}
+
+\item[\ty{nameserver\_serverid\_cap}] A distinguished badged name
+  server cap to identify a server.
+  \begin{description}
+  \item[\ty{object\_name\_reg(mobject\_cap, mobject\_name)}] A call to
+    the nameserver for registering a name for a memory object.
+  \item[\ty{object\_name\_query(mobject\_name)}] A call to the
+    nameserver for finding the name of a memory object. Name server
+    should find the name and return a the ty{mobject\_cap} to the
+    server.
+  \end{description}
+
+
+\item[\ty{nameserver\_AsyncEP}] An async endpoint used by the
+  nameserver to receive request from root server.
+  \begin{description}
+  \item[\ty{server\_name\_reg(server\_name)}] An asynchronous call to
+    the nameserver for registering a name for a server. Name server
+    should register the name and return a server\_id.
+  \item[\ty{server\_find(server\_name)}] An asynchronous call to the
+    nameserver for finding the name of a server. Name server should
+    find the name and return a server\_id.
+  \end{description}
+  
+\item[\ty{rootserver\_nameserverid\_cap}] A distinguished badged root
+  server cap to identify a name server.
+  \begin{description}
+  \item[\ty{name\_reg\_ack(RETURNCODE, server\_id)}] A call to the
+    root server for acknowledging the asynchronous registration
+    request with a return code and \ty{server\_id}.
+  \item[\ty{name\_query\_ack(RETURNCODE, server\_id)}] A call to the
+    root server for acknowledging the asynchronous name query request
+    with a return code and \ty{server\_id}.
+  \end{description}
+\end{description}
+
+
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: "paper"
+%%% End: 

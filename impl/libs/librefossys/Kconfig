@@ -1,0 +1,27 @@
+#
+# Copyright 2014, NICTA
+#
+# This software may be distributed and modified according to the terms of
+# the BSD 2-Clause license. Note that NO WARRANTY is provided.
+# See "LICENSE_BSD2.txt" for details.
+#
+# @TAG(NICTA_BSD)
+#
+
+menuconfig LIB_REFOS_SYS
+    bool "Syscall library for RefOS userland"
+    default y
+    depends on LIB_SEL4 && LIB_REFOS && HAVE_LIBC
+    help
+        Syscall library for RefOS  userland. This library is responsible for implementing simple
+        POSIX environment syscalls on top of RefOS primitives. This allows for the C standard
+        library to work and be happy, and also allows for easier porting.
+
+config REFOS_SYS_FORCE_DEBUGPUTCHAR
+    bool "Force seL4_DebugPutChar printf"
+    default n
+    depends on LIB_REFOS_SYS
+    help
+        Force RefOS userland to use seL4_DebugPutChar(), even when not needed. If this option is not
+        set, IPC messages will be sent to the Console server. This allows a few more messages to
+        print during initialisation, useful for debugging. Requires seL4 debug kernel.

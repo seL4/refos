@@ -1,0 +1,113 @@
+#
+# Copyright 2014, NICTA
+#
+# This software may be distributed and modified according to the terms of
+# the BSD 2-Clause license. Note that NO WARRANTY is provided.
+# See "LICENSE_BSD2.txt" for details.
+#
+# @TAG(NICTA_BSD)
+#
+
+config SEL4_APPS_PATH
+    string
+    option env="SEL4_APPS_PATH"
+
+menu "seL4 RefOS Applications"
+
+source "$SEL4_APPS_PATH/process_server/Kconfig"
+source "$SEL4_APPS_PATH/selfloader/Kconfig"
+source "$SEL4_APPS_PATH/file_server/Kconfig"
+source "$SEL4_APPS_PATH/console_server/Kconfig"
+source "$SEL4_APPS_PATH/timer_server/Kconfig"
+source "$SEL4_APPS_PATH/terminal/Kconfig"
+source "$SEL4_APPS_PATH/test_os/Kconfig"
+source "$SEL4_APPS_PATH/test_user/Kconfig"
+source "$SEL4_APPS_PATH/tetris/Kconfig"
+source "$SEL4_APPS_PATH/snake/Kconfig"
+source "$SEL4_APPS_PATH/nethack/Kconfig"
+
+endmenu
+
+menu "seL4 RefOS Build Options"
+
+    config REFOS_DEBUG
+        bool "Enable RefOS debugging output."
+        default n
+        help
+            Enable debug printing in RefOS.
+
+    config REFOS_DEBUG_VERBOSE
+        bool "Enable RefOS extra verbose debugging output. "
+        default n
+        help
+            Enable extra verbose debug printing in RefOS.
+            Useful for debugging low level.
+            Beware of really long logs.
+
+    config REFOS_RUN_TESTS
+        bool "Run RefOS tests"
+        default n
+        help
+            Run RefOS tests before starting the init task program.
+
+    config REFOS_INIT_TASK
+	string "RefOS app to launch on boot"
+        default "terminal"
+        help
+            Which task should refOS start when it has bootstrapped
+
+    config REFOS_INIT_TASK_PRIO
+        int "RefOS init app priority (0-255)"
+        default 50
+        help
+            seL4 priority to give to the init task
+
+    config REFOS_ENABLE_EGA
+        bool "Enable output to screen using EGA text mode."
+        default y
+        depends on PLAT_PC99 && LIB_VTERM
+        help
+            If enabled, RefOS will output stdout to EGA text mode on the screen, exposed by
+            os_server as /dev/screen. Note that this only applies to RefOS userland and system apps,
+            and do NOT enable any debug logs from the process server to be shown on the screen.
+            Enable LIB_SEL4_PLAT_SUPPORT_X86_TEXT_EGA_PUTCHAR in libplatsupport for that.
+            PC platform only.
+
+    config REFOS_ANSI_COLOUR_OUTPUT
+    bool "Enable ANSI escape sequenced colour output"
+    depends on LIB_REFOS
+    default y
+    help
+        Enable colour output using ANSI escape sequences. Disable if not outputting through serial
+        to an ANSI-enabled terminal.
+
+    config REFOS_HALT_ON_ERRNO
+    bool "Halt on RefOS errno"
+    default n
+    help
+        Enable stopping programming abrubtly on any errno set by RefOS syscalls. Useful for
+        debugging.
+
+    config REFOS_TIMEZONE
+    string "System time zone"
+    default "AEST-10"
+    help
+        The system default timezone in POSIX standard format.
+        For further documentation, see
+        http://www.gnu.org/software/libc/manual/html_node/TZ-Variable.html.
+
+    choice
+        prompt "Userland stdio dataspace"
+        default REFOS_STDIO_DSPACE_SERIAL
+        help
+            Which dataspace to use as the default output. The screen output device is available on
+            x86, when REFOS_ENABLE_EGA is enabled.
+
+        config REFOS_STDIO_DSPACE_SERIAL
+            bool "/dev_console/serial"
+        config REFOS_STDIO_DSPACE_SCREEN
+            bool "/dev_console/screen"
+            depends on REFOS_ENABLE_EGA
+    endchoice
+
+endmenu
