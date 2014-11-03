@@ -71,6 +71,11 @@ struct conserv_state {
     struct input_state devInput;
     struct device_screen_state devScreen;
 
+    #ifdef PLAT_PC99
+    ps_chardevice_t devKeyboard;
+    bool keyboardEnabled;
+    #endif
+
     seL4_CPtr serialBadgeEP;
     seL4_CPtr screenBadgeEP;
 };

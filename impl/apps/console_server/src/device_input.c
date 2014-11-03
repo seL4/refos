@@ -13,6 +13,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <assert.h>
+#include <autoconf.h>
 
 #include "device_input.h"
 #include "state.h"
@@ -37,6 +38,26 @@
     and reply to any waiters, unblocking their syscall.
 */
 
+/*! @brief Add a new character onto the getchar queue.
+    @param s The input state structure (struct input_state*)
+    @param c The new character to push.
+*/
+static void
+input_push_char(struct input_state *s, int c)
+{
+    /* If backlog is too big, prune it. */
+    while (cqueue_size(&s->inputBacklog) >= CONSERV_DEVICE_INPUT_BACKLOG_MAXSIZE) {
+        cqueue_item_t item = cqueue_pop(&s->inputBacklog);
+        (void) item;
+    }
+
+    /* Push new character onto the queue. */
+    bool success = cqueue_push(&s->inputBacklog, (cqueue_item_t) c);
+    if (!success) {
+        ROS_ERROR("input backlog queue should not be full. conserv book-keeping error.");
+    }
+}
+
 /*! @brief The IRQ handling callback function.
    
     This callback function gets called from the interrupt dispatcher module to handle RX irqs.
@@ -59,19 +80,19 @@ input_handle_irq(void *cookie, uint32_t irq)
             break;
         }
         dvprintf("You typed [%c]\n", c);
-
-        /* If backlog is too big, prune it. */
-        while (cqueue_size(&s->inputBacklog) >= CONSERV_DEVICE_INPUT_BACKLOG_MAXSIZE) {
-            cqueue_item_t item = cqueue_pop(&s->inputBacklog);
-            (void) item;
-        }
-
-        /* Push new character onto the queue. */
-        bool success = cqueue_push(&s->inputBacklog, (cqueue_item_t) c);
-        if (!success) {
-            ROS_ERROR("input backlog queue should not be full. conserv book-keeping error.");
-        }
+        input_push_char(s, c);
     }
+
+    #ifdef PLAT_PC99
+    while (1) {
+        int c = ps_cdev_getchar(&conServ.devKeyboard);
+        if (c == -1) {
+            break;
+        }
+        dvprintf("You typed on keyboard [%c]\n", c);
+        input_push_char(s, c);
+    }
+    #endif
 
     /* Notify any waiters. */
     for (int i = 0; i < cvector_count(&s->waiterList); i++) {
@@ -101,8 +122,9 @@ input_handle_irq(void *cookie, uint32_t irq)
         waiter->magic = 0x0;
         free(waiter);
         cvector_set(&s->waiterList, i, (cvector_item_t) NULL);
+        cvector_delete(&s->waiterList, i);
+        i--;
     }
-    cvector_reset(&s->waiterList);
 }
 
 void
@@ -122,6 +144,14 @@ input_init(struct input_state *s)
             dev_handle_irq(&conServ.irqState, i, input_handle_irq, (void*) s);
             input_handle_irq((void*) s, i);
         }
+        #ifdef PLAT_PC99
+        if (conServ.keyboardEnabled) {
+            if (ps_cdev_produces_irq(&conServ.devKeyboard, i)) {
+                dev_handle_irq(&conServ.irqState, i, input_handle_irq, (void*) s);
+                input_handle_irq((void*) s, i);
+            }
+        }
+        #endif
     }
 }
 

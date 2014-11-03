@@ -47,9 +47,6 @@ conserv_writev_override(void *data, size_t count)
 {
     for (int i = 0; i < count; i++) {
         ps_cdev_putchar(&conServ.devSerial, ((char*) data)[i]);
-        if(((char*) data)[i] == '\n') {
-            ps_cdev_putchar(&conServ.devSerial, '\r');
-        }
     }
     if (conServ.devScreen.initialised) {
         device_screen_write(&conServ.devScreen, (char*) data, (int) count);
@@ -123,9 +120,24 @@ conserv_init(void)
     conServ.screenBadgeEP = srv_mint(CONSERV_DSPACE_BADGE_SCREEN, conServCommon->anonEP);
     assert(conServ.screenBadgeEP);
 
+    /* Set up keyboard device. */
+    #ifdef PLAT_PC99
+    ps_chardevice_t *devKeyboardRet;
+    dprintf("ps_cdev_init keyboard...\n");
+    devKeyboardRet = ps_cdev_init(PC99_KEYBOARD_PS2, &conServ.devIO.opsIO, &conServ.devKeyboard);
+    if (!devKeyboardRet || devKeyboardRet != &conServ.devKeyboard) {
+        ROS_ERROR("Console Server could not initialise keyboard device.");
+        assert(!"conserv_init failed.");
+        exit(1);
+    }
+    conServ.keyboardEnabled = true;
+    #endif
+
     /* Set up input device. */
     input_init(&conServ.devInput);
 
     /* Set up screen device. */
     device_screen_init(&conServ.devScreen, &conServ.devIO);
+
+    dprintf("conserv_init over...\n");
 }
