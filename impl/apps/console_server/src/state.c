@@ -122,7 +122,6 @@ conserv_init(void)
     assert(conServ.screenBadgeEP);
 
     /* Set up keyboard device. */
-    conServ.keyboardEnabled = false;
     #if defined(PLAT_PC99) && defined(CONFIG_REFOS_ENABLE_KEYBOARD)
     ps_chardevice_t *devKeyboardRet;
     dprintf("ps_cdev_init keyboard...\n");
@@ -133,6 +132,8 @@ conserv_init(void)
         exit(1);
     }
     conServ.keyboardEnabled = true;
+    #else
+    conServ.keyboardEnabled = false;
     #endif
 
     /* Set up input device. */
