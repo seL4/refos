@@ -8,6 +8,7 @@
  * @TAG(NICTA_BSD)
  */
 
+#include <autoconf.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -121,7 +122,8 @@ conserv_init(void)
     assert(conServ.screenBadgeEP);
 
     /* Set up keyboard device. */
-    #ifdef PLAT_PC99
+    conServ.keyboardEnabled = false;
+    #if defined(PLAT_PC99) && defined(CONFIG_REFOS_ENABLE_KEYBOARD)
     ps_chardevice_t *devKeyboardRet;
     dprintf("ps_cdev_init keyboard...\n");
     devKeyboardRet = ps_cdev_init(PC99_KEYBOARD_PS2, &conServ.devIO.opsIO, &conServ.devKeyboard);

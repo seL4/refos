@@ -84,7 +84,7 @@ input_handle_irq(void *cookie, uint32_t irq)
     }
 
     #ifdef PLAT_PC99
-    while (1) {
+    while (conServ.keyboardEnabled) {
         int c = ps_cdev_getchar(&conServ.devKeyboard);
         if (c == -1) {
             break;

@@ -1,7 +1,7 @@
 #
 # Automatically generated make config: don't edit
 # Project Configuration
-# Mon Sep 29 16:41:01 2014
+# Fri Nov 28 14:50:46 2014
 #
 
 #
@@ -18,6 +18,7 @@ CONFIG_ARCH_I386=y
 # CONFIG_ARCH_X86_64 is not set
 # CONFIG_ARCH_ARM is not set
 CONFIG_ARCH_IA32=y
+# CONFIG_PLAT_EXYNOS54XX is not set
 CONFIG_PLAT_PC99=y
 CONFIG_IOMMU=y
 CONFIG_VTX=y
@@ -141,6 +142,7 @@ CONFIG_REFOS_ANSI_COLOUR_OUTPUT=y
 CONFIG_REFOS_TIMEZONE="AEST-10"
 # CONFIG_REFOS_STDIO_DSPACE_SERIAL is not set
 CONFIG_REFOS_STDIO_DSPACE_SCREEN=y
+CONFIG_REFOS_ENABLE_KEYBOARD=y
 
 #
 # Toolchain Options

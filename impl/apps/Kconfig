@@ -110,4 +110,11 @@ menu "seL4 RefOS Build Options"
             depends on REFOS_ENABLE_EGA
     endchoice
 
+    config REFOS_ENABLE_KEYBOARD
+        bool "Enable input from PS2 keyboard."
+        default n
+        depends on PLAT_PC99
+        help
+            If enabled, RefOS will input stdin from PS2 keyboard drivers as well as serial in.
+
 endmenu
