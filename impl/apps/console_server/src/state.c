@@ -132,8 +132,6 @@ conserv_init(void)
         exit(1);
     }
     conServ.keyboardEnabled = true;
-    #else
-    conServ.keyboardEnabled = false;
     #endif
 
     /* Set up input device. */
