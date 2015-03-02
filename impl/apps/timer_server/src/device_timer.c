@@ -52,6 +52,16 @@
     #define TICK_TIMER_PERIOD (2000000)
     #define TICK_TIMER_SCALE_NS 1
 
+#elif defined(PLAT_AM335x)
+
+    #define TIMER_ID DMTIMER2
+    #define TICK_ID DMTIMER3
+    #define TIMER_PERIODIC_MAX_SET true
+    /* XXX am I doing this right? this is the largest period in nsec you can pass to the timer APIs */
+    #define TIMER_PERIODIC_MAX 178956970666  // ((((1UL << 32) / 24UL) * 1000UL) - 1) 
+    #define TICK_TIMER_PERIOD (2000000)
+    #define TICK_TIMER_SCALE_NS 1
+
 #elif defined(PLAT_PC99)
 
     /* PIT only needs IOPort operations. */
@@ -62,6 +72,7 @@
     #define TICK_TIMER_SCALE_NS 1
 
     #include <platsupport/plat/rtc.h>
+
 #else
     #error "Unsupported platform."
 #endif
@@ -221,6 +232,29 @@ device_timer_init(struct device_timer_state *s, dev_io_ops_t *io)
 
     /* Get the timer interface from EPIT device. */
     s->tickDev = epit_get_timer(&econfig);
+
+#elif defined(PLAT_AM335x)
+
+    timer_config_t config;
+    config.vaddr = ps_io_map(&io->opsIO.io_mapper, dm_timer_paddrs[TIMER_ID],
+                             0x1000, false, PS_MEM_NORMAL);
+    config.irq = dm_timer_irqs[TIMER_ID];
+    if (!config.vaddr) {
+        ROS_ERROR("Could not map timer device.");
+        assert(!"Could not map timer device.");
+        return;
+    }
+    s->timerDev = ps_get_timer(TIMER_ID, &config);
+
+    config.vaddr = ps_io_map(&io->opsIO.io_mapper, dm_timer_paddrs[TICK_ID],
+                             0x1000, false, PS_MEM_NORMAL);
+    config.irq = dm_timer_irqs[TICK_ID];
+    if (!config.vaddr) {
+        ROS_ERROR("Could not map tick timer device.");
+        assert(!"Could not map tick timer device.");
+        return;
+    }
+    s->tickDev = ps_get_timer(TICK_ID, &config);
 
 #elif defined(PLAT_PC99)
 
