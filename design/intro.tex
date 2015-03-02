@@ -130,7 +130,7 @@ The basic concept of a capability (henceforth referred to as \emph{cap}) is that
 an object representing the permission to access a particular object. This is
 similar in idea to UNIX file descriptors, which represent the access that the
 process has to the file. Just like a UNIX file descriptor table, the capability
-objects are to be kept in kernel memory. User programs only have handles so
+objects are to be kept in kernel memory. User programs only have handles to
 such objects, and cannot directly manipulate them.
 
 The \refOS is designed with the assumption that synchronous call and reply IPC
@@ -142,7 +142,7 @@ it has received via IPC.
 In the sample implementation given using the seL4 microkernel, this is
 implemented as kernel IPC endpoint \emph{badges}; endpoint capabilities may be
 badged with an integer, and the badge of an endpoint once it has been badged is
-immutable. When a badged endpoint cap is send along the same endpoint the one
+immutable. When a badged endpoint cap is sent along the same endpoint the one
 it is pointing to, then the kernel automatically \emph{unwraps} the badge to be
 read. Therefore, only the process which created the badge can read it back via
 IPC. \refOS makes heavily use of these badges in order for servers to track

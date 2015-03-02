@@ -45,7 +45,7 @@ We used the kernel communication mechanisms to implement server interface calls.
 Python script RPC stub generator which takes our RefOS interface (extended for extra functionality
 and to make implementation easier) in a simple XML format and generates corresponding C stub code.
 Parameters are marshalled and unmarshalled over the kernel thread IPC buffer. This isn't very
-efficient, but requires the least amount of infrastructure. For long string parameters which do
+efficient, but requires the least amount of infrastructure. For long string parameters which 
 are unsuited to the IPC buffer, and notifications, a shared dataspace buffer is used.
 
 For async notifications, a shared dataspace with a one-way ring buffer protocol is used between the
