@@ -58,7 +58,7 @@ dev_io_map(void* cookie, uintptr_t paddr, size_t size, int cached, ps_mem_flags_
 
     /* Open and map the device MMIO dataspace. */
     (*deviceMapping) = data_open_map(REFOS_PROCSERV_EP, "anon",
-            DSPACE_FLAG_DEVICE_PADDR | (cached ? DSPACE_FLAG_UNCACHED : 0),
+            DSPACE_FLAG_DEVICE_PADDR | (cached ? 0 : DSPACE_FLAG_UNCACHED),
             (int) paddr, size, size);
     if (deviceMapping->err) {
         ROS_ERROR("Could not open and map device dataspace.");

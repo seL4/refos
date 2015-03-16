@@ -58,7 +58,7 @@ data_open_handler(void *rpc_userptr , char* rpc_name , int rpc_flags , int rpc_m
     }
 
     /* Set physical address mode, if required. */
-    if (rpc_flags == PROCSERV_DSPACE_FLAG_DEVICE_PADDR) {
+    if ((rpc_flags & PROCSERV_DSPACE_FLAG_DEVICE_PADDR) != 0) {
         int error = EACCESSDENIED;
         if (pcb->systemCapabilitiesMask & PROCESS_PERMISSION_DEVICE_MAP) {
             error = ram_dspace_set_to_paddr(newDataspace, (uint32_t) rpc_mode);
