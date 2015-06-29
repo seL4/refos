@@ -13,6 +13,8 @@ PATCHLEVEL = 0
 SUBLEVEL = 0
 EXTRAVERSION = 1
 
+lib-dirs:=libs
+
 # The main target we want to generate
 all: generate-rpc refos
 
