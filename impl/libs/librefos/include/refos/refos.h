@@ -11,6 +11,8 @@
 #ifndef _REFOS_H_
 #define _REFOS_H_
 
+#include <stdint.h>
+
 #include <sel4/sel4.h>
 #include <refos/error.h>
 

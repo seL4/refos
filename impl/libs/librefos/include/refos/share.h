@@ -21,6 +21,8 @@
 #ifndef _REFOS_SHARE_H_
 #define _REFOS_SHARE_H_
 
+#include <stddef.h>
+
 #include "refos.h"
 
 /*! @brief Read from a shared buffer.
