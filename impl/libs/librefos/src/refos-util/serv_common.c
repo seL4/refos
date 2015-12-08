@@ -163,7 +163,7 @@ srv_common_init(srv_common_t *s, srv_common_config_t config)
 
     /* Bind the notification AEP. */
     dprintf("    binding notification AEP...\n");
-    int error = seL4_TCB_BindAEP(REFOS_THREAD_TCB, s->notifyAsyncEP);
+    int error = seL4_TCB_BindNotification(REFOS_THREAD_TCB, s->notifyAsyncEP);
     if (error != seL4_NoError) {
         ROS_ERROR("srv_common_init could not bind async endpoint.");
         return EINVALID;

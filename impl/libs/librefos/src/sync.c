@@ -46,7 +46,7 @@ sync_create_mutex()
     }
 
     /* Prime the endpoint. */
-    seL4_Notify(mutex->mapping, 1);
+    seL4_Signal(mutex->mapping);
     return mutex;
 }
 
@@ -62,16 +62,17 @@ sync_acquire(sync_mutex_t mutex)
 {
     seL4_Word badge;
     assert(mutex);
-    seL4_MessageInfo_t msginfo = seL4_Wait(mutex->mapping, &badge);
+    seL4_MessageInfo_t msginfo = seL4_Recv(mutex->mapping, &badge);
     assert(badge == SYNC_ASYNC_BADGE_MAGIC);
     (void) msginfo;
+
 }
 
 void
 sync_release(sync_mutex_t mutex)
 {
     /* Release the lock and wake the next thread up. */
-    seL4_Notify(mutex->mapping, 1);
+    seL4_Signal(mutex->mapping);
 }
 
 int

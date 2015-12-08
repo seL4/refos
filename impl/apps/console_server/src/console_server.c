@@ -107,7 +107,7 @@ console_server_mainloop(void)
     srv_msg_t msg;
 
     while (1) {
-        msg.message = seL4_Wait(conServCommon->anonEP, &msg.badge);
+        msg.message = seL4_Recv(conServCommon->anonEP, &msg.badge);
         console_server_handle_message(s, &msg);
         client_table_postaction(&conServCommon->clientTable);
     }
