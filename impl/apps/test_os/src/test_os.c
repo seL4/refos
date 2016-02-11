@@ -147,7 +147,7 @@ test_process_server_endpoints(void)
     seL4_NBSend(aep, tag);
 
     seL4_Word badge;
-    seL4_Wait(aep, &badge);
+    seL4_Recv(aep, &badge);
 
     test_assert(badge == 0);
     test_assert(seL4_GetMR(0) == 0x31336);
@@ -298,7 +298,7 @@ test_process_server_nameserv(void)
     seL4_NBSend(mp.serverAnon, tag);
 
     seL4_Word badge;
-    seL4_Wait(aep, &badge);
+    seL4_Recv(aep, &badge);
     test_assert(badge == 0);
     test_assert(seL4_GetMR(0) == 0xabbadadd);
 

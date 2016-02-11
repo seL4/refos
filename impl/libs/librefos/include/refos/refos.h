@@ -15,6 +15,8 @@
 
 #include <sel4/sel4.h>
 #include <refos/error.h>
+#include <stdint.h>
+#include <stddef.h>
 
 /* Include Kconfig variables. */
 #include <autoconf.h>

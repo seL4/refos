@@ -229,7 +229,7 @@ test_threads(void)
     for(int i = 0; i < TEST_NUMTHREADS; i++) {
         tvprintf("test_threads waiting thread child %d...\n", i);
         seL4_Word badge;
-        seL4_Wait(testThreadEP, &badge);
+        seL4_Recv(testThreadEP, &badge);
         test_assert(badge == 0);
     }
 

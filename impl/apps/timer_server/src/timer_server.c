@@ -101,7 +101,7 @@ timer_server_mainloop(void)
     srv_msg_t msg;
 
     while (1) {
-        msg.message = seL4_Wait(s->commonState.anonEP, &msg.badge);
+        msg.message = seL4_Recv(s->commonState.anonEP, &msg.badge);
         timer_server_handle_message(s, &msg);
         client_table_postaction(&s->commonState.clientTable);
     }
