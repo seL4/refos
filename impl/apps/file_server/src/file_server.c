@@ -112,7 +112,7 @@ fileserv_mainloop(void)
     
     while (1) {
         dvprintf("Fileserver blocking for message...\n");
-        msg.message = seL4_Wait(fileServCommon->anonEP, &msg.badge);
+        msg.message = seL4_Recv(fileServCommon->anonEP, &msg.badge);
         fileserv_handle_message(s, &msg);
         client_table_postaction(&fileServCommon->clientTable);
     }

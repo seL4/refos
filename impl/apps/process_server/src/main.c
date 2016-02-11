@@ -123,7 +123,7 @@ proc_server_loop(void)
 
     while (1) {
         dvprintf("procserv blocking for new message...\n");
-        msg.message = seL4_Wait(s->endpoint.cptr, &msg.badge);
+        msg.message = seL4_Recv(s->endpoint.cptr, &msg.badge);
         proc_server_handle_message(s, &msg);
         s->faketime++;
     }
