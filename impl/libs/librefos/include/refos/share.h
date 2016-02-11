@@ -22,6 +22,7 @@
 #define _REFOS_SHARE_H_
 
 #include "refos.h"
+#include <stdlib.h>
 
 /*! @brief Read from a shared buffer.
     @param dest Buffer in which to store the read data. (output, no ownership)
