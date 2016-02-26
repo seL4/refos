@@ -15,7 +15,6 @@ config SEL4_LIBS_PATH
 menu "seL4 Libraries"
 
 source "$SEL4_LIBS_PATH/libsel4/Kconfig"
-source "$SEL4_LIBS_PATH/elfloader/Kconfig"
 source "$SEL4_LIBS_PATH/libcpio/Kconfig"
 source "$SEL4_LIBS_PATH/libdatastruct/Kconfig"
 source "$SEL4_LIBS_PATH/libelf/Kconfig"

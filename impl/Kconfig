@@ -22,4 +22,5 @@ config COMMON_PATH
 
 source libs/Kconfig
 source apps/Kconfig
+source tools/elfloader/Kconfig
 source "$COMMON_PATH/Kconfig"
