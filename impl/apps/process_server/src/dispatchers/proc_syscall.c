@@ -53,9 +53,9 @@ proc_syscall_allocate_endpoint(struct proc_pcb *pcb, kobject_t type)
     /* Allocate the kernel object. */
     vka_object_t endpoint;
     int error = -1;
-    if (type == KOBJECT_ENDPOINT_SYNC) {
+    if (type == KOBJECT_ENDPOINT) {
         error = vka_alloc_endpoint(&procServ.vka, &endpoint);
-    } else if (type == KOBJECT_ENDPOINT_ASYNC) {
+    } else if (type == KOBJECT_NOTIFICATION) {
         error = vka_alloc_async_endpoint(&procServ.vka, &endpoint);
     } else {
         assert(!"Invalid endpoint type.");
@@ -93,7 +93,7 @@ proc_new_endpoint_internal_handler(void *rpc_userptr , refos_err_t* rpc_errno)
     struct proc_pcb *pcb = (struct proc_pcb*) rpc_userptr;
     assert(pcb->magic == REFOS_PCB_MAGIC);
     dprintf("Process server creating endpoint!\n");
-    seL4_CPtr ep = proc_syscall_allocate_endpoint(pcb, KOBJECT_ENDPOINT_SYNC);
+    seL4_CPtr ep = proc_syscall_allocate_endpoint(pcb, KOBJECT_ENDPOINT);
     if (!ep) {
         SET_ERRNO_PTR(rpc_errno, ENOMEM);
         return 0;
@@ -109,7 +109,7 @@ proc_new_async_endpoint_internal_handler(void *rpc_userptr , refos_err_t* rpc_er
     struct proc_pcb *pcb = (struct proc_pcb*) rpc_userptr;
     assert(pcb->magic == REFOS_PCB_MAGIC);
     dprintf("Process server creating async endpoint!\n");
-    seL4_CPtr ep = proc_syscall_allocate_endpoint(pcb, KOBJECT_ENDPOINT_ASYNC);
+    seL4_CPtr ep = proc_syscall_allocate_endpoint(pcb, KOBJECT_NOTIFICATION);
     if (!ep) {
         SET_ERRNO_PTR(rpc_errno, ENOMEM);
         return 0;
