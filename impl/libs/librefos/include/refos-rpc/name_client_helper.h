@@ -53,7 +53,7 @@ typedef struct nsv_mountpoint {
 static inline seL4_CPtr
 nsv_resolve_segment(seL4_CPtr nameserv, char* path, int* resolvedBytes)
 {
-	refos_err_t errnoRetVal = EINVALID;
+    refos_err_t errnoRetVal = EINVALID;
     int tempResolvedBytes = 0;
 
     seL4_CPtr tcap = nsv_resolve_segment_internal(nameserv, path, &tempResolvedBytes, &errnoRetVal);

@@ -97,7 +97,7 @@ client_watch(struct proc_watch_list *wl, uint32_t pid, seL4_CPtr notifyEP)
     }
     memset(cslot, 0, sizeof(cspacepath_t));
 
-    /* Save the cap path, and take overship of the given notify EP. */
+    /* Save the cap path, and take ownership of the given notify EP. */
     vka_cspace_make_path(&procServ.vka, notifyEP, cslot);
 
     int idx = client_watch_find(wl, pid);

@@ -39,7 +39,7 @@
     When mapping a dataspace to a non-page aligned window, the dataspace will actually be mapped to
     the page-aligned address of the window base due to technical restrictions. Thus, the first B -
     PAGE_ALIGN(B) bytes of the mapped dataspace is unaccessible. This can have unintended effects
-    when two process map the same dataspace for sharing purposes. In other words, when sharing
+    when two processes map the same dataspace for sharing purposes. In other words, when sharing
     dataspaces, it's easiest for the window bases for BOTH processes to be page-aligned.
  */
 seL4_CPtr
@@ -189,7 +189,7 @@ proc_get_mem_window_dspace_handler(void *rpc_userptr , seL4_CPtr rpc_window ,
 /*! @brief Handles server pager setup syscalls.
 
     A dataserver calls the process server with this call in order to set up to be the pager of
-    one of its client processes, for a particular window. The client process is identified by the
+    one of its client processes for a particular window. The client process is identified by the
     passing of its liveliness cap. All faults for the client's process which happen at that window
     will then be delegated to the dataserver to be handled.
 */

@@ -31,7 +31,7 @@
     @param bufVaddr The shared ringbuffer address. (input, no ownership)
     @param bufSize The shared ringbuffer size.
     @param start Handle to the associated start address (input, output, no ownership)
-    @param bytesRead The number of bytes that has been successfulyl read from the shared buffer.
+    @param bytesRead The number of bytes that has been successfully read from the shared buffer.
                      (output, no ownership)
     @return 0 if success, -1 otherwise.
  */
