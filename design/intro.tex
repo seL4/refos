@@ -10,182 +10,91 @@
 % @TAG(D61_BSD)
 %
 
-This document provides the abstract protocols for a multi-server microkernel based operating system.
+This document explains the abstract protocols for a multi-server microkernel based operating system.
 
-The overall design revolves around the abstraction of a dataspace. A dataspace is a memory space, a
-series of bytes, representing anything from physical RAM to file contents on disk to a device or
-even to a random number generator. The concept is analogous to UNIX files, which may represent
-anything from \texttt{/usr/bin/sh} to \texttt{/dev/audio} to \texttt{/dev/urandom}.
+The overall design of \refOS revolves around the abstraction of a dataspace. A dataspace is a memory space (a series of bytes) representing anything from physical RAM to file contents on a disk to a device or even to a random number generator. The concept is analogous to UNIX files which may represent anything from \texttt{/usr/bin/sh} to \texttt{/dev/audio} to \texttt{/dev/urandom}.
 
-This dataspace abstraction which dataspace servers provide paves the way for more complicated
-infrastructure on top such as sharing with complex trust relationships, memory management, file
-systems, and distributed naming. On top of this additional infrastructure, the OS may implement more
-features such as POSIX standard syscalls, ports of existing software, drivers, display servers, and
-so forth.
+The dataspace abstraction which dataspace servers provide paves the way for more complicated infrastructure such as sharing with complex trust relationships, memory management, file systems, and distributed naming. On top of this additional infrastructure, an operating system could implement features such as POSIX standard system calls, ports of existing software, drivers and display servers.
 
 % ----------------------------------------------------------------------
 \section{Terms}
 
-This section will attempt to briefly clarify term ambiguities before the details
-are presented. The brief descriptions also quickly give an overview of the
-terms.
+This section defines a number of terms that are used in this document.
 
-\texttt{Methods} are conceptual "function calls", although they are usually
-implemented via communication with another process, in which case they are
-actually remote procedure calls. Regardless of the underlying implementation,
-methods here refer to the actual procedures of an interface which get invoked.
+\texttt{Methods} are conceptual "function calls" although they are usually implemented via communication with another process in which case they are actually remote procedure calls. Regardless of the underlying implementation, methods here refer to the actual procedures of an interface which get invoked.
 
-\texttt{Interface} is a collection of (usually related) methods, that
-usually serve to abstract a conceptual object. For instance, the \texttt{c}
-standard library functions \texttt{fopen}, \texttt{fscanf}, \texttt{fprintf},
-\texttt{fclose} ..etc form an abstract interface and provide abstraction for a
-\emph{file} object.
+\texttt{Interfaces} are a collection of (usually related) methods that usually serve to abstract a conceptual object. For instance, the \texttt{C} standard library functions \texttt{fopen}, \texttt{fscanf}, \texttt{fprintf}, \texttt{fclose} and so on form an abstract interface and provide abstraction for a file object.
 
-\texttt{Message Sequence} is an ordered sequence of method invocations,
-replies, event notifications or operations which may achieve some overall
-result or goal.  Example message sequences using the described protocols for
-commonly needed goals will be presented in this document.
+\texttt{Message sequences} are ordered sequences of method invocations, replies, event notifications or operations which may achieve some overall result or goal. Example message sequences using the described protocols for commonly needed goals are presented in this document.
 
-\texttt{Protocol} here will refer to a collection of interfaces, their methods,
-message sequences and system components.
+\texttt{Protocols} here refer to a collection of interfaces, their methods, message sequences and system components.
 
-\texttt{Dataspaces} are abstractions over memory objects, analogous to UNIX files. A dataspace
-may be opened / closed, written to or read from, mapped into client memory, and may represent
-a device, a file, or simply anonymous memory.
+\texttt{Dataspaces} are abstractions over memory objects, analogous to UNIX files. A dataspace may be opened and closed, written to and read from, mapped into client memory and may represent a device, a file, or simply anonymous memory.
 
-\texttt{Servers} are normal processes which have registered themselves using
-the naming service so that other client processes may find. Once the client
-finds the process, the client may then connect and establish a session with the
-server, and the server is given access to the notification of client deaths in
-order to do any client book-keeping it may require.
+\texttt{Servers} are normal processes which have registered themselves using the naming service so that other client processes may find them. Once a client finds a process, the client may connect and establish a session with the server and the server is given access to the notification of client deaths in order to do any client bookkeeping that it may require.
 
-\texttt{Dataspace servers} (henceforth also referred to as \emph{dataservers}) are
-servers which implement the dataspace interface (or a subset of it), in order to
-provide a dataspace service to clients. Dataspace servers may be most likely
-designed to provide the dataspaces which represent a common concept. For
-instance, a file server may implement the dataspace interface for files stored
-on disk, while an audio driver may serve audio bytestream dataspaces.
+\texttt{Dataspace servers} (henceforth also referred to as \emph{dataservers}) are servers which implement the dataspace interface (or a subset of it) in order to provide a dataspace service to clients. Dataspace servers are often designed to provide dataspaces which represent a common concept. For instance, a file server may implement the dataspace interface for files stored on disk, and an audio driver may serve audio bytestream dataspaces.
 
-\texttt{Process servers} are servers which implement the process server interface,
-and provide process abstraction. In practice, the process server may also need
-to implement additional interfaces and provide additional functionality in order
-for a system to start. For instance in our sample implementation the process server
-also does naming, console input/output, and implements the dataspace interface
-for anonymous memory and acts as the memory manager.
+\texttt{Process servers} are servers which implement the process server interface and provide process abstraction. In practice, the process server may also need to implement additional interfaces and provide additional functionality in order for a system to start. For instance, in \refOS the process server also does naming and console input and output, implements the dataspace interface for anonymous memory and acts as the memory manager.
 
-\texttt{Pagers} are servers which implement the pager service interface, which
-is very closely related to the dataspace interface, and can be considered an
-optional feature of a dataspace server. Dataspace servers which act as pagers
-may have its dataspaces be mapped directly into client virtual memory.
+\texttt{Pagers} are servers which implement the pager service interface, which is very closely related to the dataspace interface and can be considered an optional feature of a dataspace server. Dataspace servers which act as pagers may have their dataspaces mapped directly into client virtual memory.
 
 % ----------------------------------------------------------------------
-\section{Microkernel}
+\section{Microkernel Design}
 
-The \refOS protocol is designed with an \Lf family microkernel in mind, and
-assumes the existence of features such as inter-thread IPC and capabilities.
-This section describes in detail the notable assumed features, with brief
-descriptions of such features.  These features are available in advanced
-\Lf-based microkernels such as \seLf.
+\refOS is designed with an \Lf family microkernel in mind and assumes the existence of features such as interprocess communication and capabilities. This section describes these assumed features. These features are available in advanced \Lf-based microkernels such as \seLf.
 
-\subsection{IPC Messages}
+\subsection{Interprocess Communication}
 
 \begin{itemize}
 
-	\item 
-	\textbf{Synchronous Calls} are used to invoke methods implemented by a
-	server. They involve a badged cap invocation (of a synchronous endpoint or
-	SEP) that identifies the server and represents the authority of the caller.
-	The caller blocks until the server responds. \emph{Note: A caller
-	implicitly trusts the server it calls.} Calling an untrusted server is
-	possible, but should be avoided in general -- which we strive to do in
-	\refOS.
+	\item
+	\textbf{Synchronous Calls} are used to invoke methods implemented by a server. They involve a badged capability invocation of a synchronous endpoint that identifies the server and represents the authority of the caller.	The caller blocks until the server responds. A caller implicitly trusts the server it calls. Calling an untrusted server is possible, but doing so should be avoided in general.
 
-	Exceptions, such as page faults, are propagated via sending and blocking on
-	a SEP.
-
-	\item 
-	\textbf{Reply} via reply caps. A call via invoking a SEP generates a Reply
-	capability for the server to respond to the caller. Thus the callee can
-	send a response to the original caller, and unblock the caller, by replying
-	with the reply capability. Note that reply caps are guaranteed to either
-	succeed or fail and not block. This is required for a trusted server to
-	safely reply to an untrusted client.
+	Exceptions, such as page faults, are propagated via sending and blocking on	a synchronous endpoint.
 
 	\item
-	\textbf{Asynchonous Notifications} are sent via a \texttt{Send} to an
-	asynchronous end point (AEP) capability. Notifications are non-blocking
-	with at-least-once semantics (the bits are OR'd together). This AEP can be
-	used to notify an untrusted client. To send messages(as opposed to just
-	notifications) to an untrusted client, shared memory must be set up between
-	the two. Care must be taken to avoid blocking, denial of service, etc... on
-	and shared memory buffer which may be filled up.
+	\textbf{Reply} protocols occur via reply capabilities. A call via invoking a synchronous endpoint generates a reply	capability for the server to respond to the caller. The callee can send a response to the original caller and unblock the caller by replying	with the reply capability. Reply capabilities are guaranteed either to succeed	or to fail and not to block. Non-blocking replies are required for a trusted server to safely reply to an untrusted client.
+
+	\item
+	\textbf{Asynchronous Notifications} are sent via a \texttt{send} to an asynchronous endpoint capability. Notifications are non-blocking
+with at-least-once semantics (the bits are OR'd together). The asynchronous endpoint can be used to notify an untrusted client. To send messages (as opposed to just notifications) to an untrusted client, shared memory must be set up between the server and the client. Care must be taken to avoid unfavourable results	like blocking and denial of service on shared memory buffers which may fill up.
 
 \end{itemize}
 
 \subsection{Capability Access Model}
 
-\refOS assumes the microkernel provides support for a capability-based access
-model, and more importantly, the ability to transfer badged capabilities via
-IPC. 
+\refOS assumes the microkernel that it runs on provides support for a capability-based access model, and more importantly, the ability to transfer badged capabilities via interprocess communication. 
 
-The basic concept of a capability (henceforth referred to as \emph{cap}) is that
-an object representing the permission to access a particular object. This is
-similar in idea to UNIX file descriptors, which represent the access that the
-process has to the file. Just like a UNIX file descriptor table, the capability
-objects are to be kept in kernel memory. User programs only have handles to
-such objects, and cannot directly manipulate them.
+The basic concept of a capability is that a capability is an object that contains the permissions to access a particular object. This is a similar concept to UNIX file descriptors which indicate the access that a process has to a file. Just like UNIX file descriptor tables, capability objects are kept in kernel memory. User programs only have handles to such objects and cannot directly manipulate them.
 
-The \refOS is designed with the assumption that synchronous call and reply IPC
-messages may contain capabilities, and that there is some way to store a
-minimal amount of immutable information in such capabilities, and that the
-receiving process may read the immutable information from the capabilities that
-it has received via IPC. 
+\refOS is designed under the assumption that synchronous call and reply interprocess communication messages may contain capabilities. \refOS also assumes that there is some way to store a minimal amount of immutable information in such capabilities and that receiving processes may read the immutable information from the capabilities that they receive via interprocess communication.
 
-In the sample implementation given using the seL4 microkernel, this is
-implemented as kernel IPC endpoint \emph{badges}; endpoint capabilities may be
-badged with an integer, and the badge of an endpoint once it has been badged is
-immutable. When a badged endpoint cap is sent along the same endpoint the one
-it is pointing to, then the kernel automatically \emph{unwraps} the badge to be
-read. Therefore, only the process which created the badge can read it back via
-IPC. \refOS makes heavily use of these badges in order for servers to track
-server objects (such as windows and dataspaces).
+In the sample implementation given using the \seLf microkernel, these assumptions are implemented as kernel interprocess communication endpoint \emph{badges}. Endpoint capabilities may be badged with an integer, and the badge of an endpoint once it has been set is immutable. When a badged endpoint capability is sent along the endpoint that it is pointing to, the kernel \emph{unwraps} the badge to be read. Only the process which created the badge can read it back via interprocess communication. \refOS makes heavy use of these badges in order for servers to track server objects (such as windows and dataspaces).
 
 \subsection{Virtual Memory Support}
 
-\refOS assumes that the underlying kernel exposes virtual memory management.
-This is a standard feature of microkernels. It is also assumed that the kernel
-is able to deliver page fault exceptions via IPC to a memory manager thread,
-and be able to resolve the fault at a later stage by replying to the IPC.
+\refOS assumes that the underlying kernel exposes virtual memory management. This is a standard feature of microkernels. \refOS also assumes that the kernel is able to deliver page fault exceptions via interprocess communication to a memory manager thread and is able to resolve the fault at a later stage by replying to the interprocess communication.
 
 % -----------------------------------------------------------------------------
 \section{Notation}
 
-This section outlines the notation used to describe the \refOS protocol.
-Specifically, it looks at the messaging between components that is used to
-develop higher-level protocols. 
+This section outlines the notation used to describe \refOS's protocols. Specifically, it looks at the messaging among components that is used to develop higher-level protocols. 
 
 \subsection{Operation Types} 
 
-\autoref{fig:mta} presents the four basic operations we are using (and
-indirectly attempting to limit ourselves to). They are synchronous calls (i.e.
-a method invocation on an object), replies, asynchronous notifications, and
-kernel system calls that asynchronously modify the state of another process
-(such as mapping memory directly into the virtual address space of another
-process).
+\autoref{fig:mta} presents the four basic operations \refOS employs (and indirectly attempts to limit itself to). They are synchronous calls (a method invocation on an object), replies, asynchronous notifications, and kernel system calls that asynchronously modify the state of another process (such as mapping memory directly into the virtual address space of another process).
 
-The synchronous / asynchronous calls and reply operations may be implemented
-directly using the microkernel features described above, such as IPC,
-capabilities, the ability to send capabilities via IPC, virtual memory
-operations, and so on.
+Synchronous and asynchronous call and reply operations may be implemented directly using the microkernel features described above, such as interprocess communication, capabilities, capabilities via interprocess communication and virtual memory operations.
 
 \begin{figure}[htb]
   \centering
   \begin{msc}
     msc {
       A, B;
-      A => B [ label = "A synchronous call or fault via a SEP"];
-      A << B [ label = "A return from a call (via reply cap)"];
-      A -> B [ label = "An asynchronous signal via an AEP"];
+      A => B [ label = "A synchronous call or fault via a synchronous endpoint"];
+      A << B [ label = "A return from a call (via reply capability)"];
+      A -> B [ label = "An asynchronous signal via an asynchronous endpoint"];
       A :> B [ label = "A kernel operation that affects B"];
     }
   \end{msc}
@@ -194,24 +103,15 @@ operations, and so on.
 \end{figure}
 
 \subsection{Message Notation} 
+\label{mNotation}
 
-Protocols are shown as series of messages. Messages are implemented by operations,
-and the types of different messages directly correlate to the operation types.
-This section outlines the notation which this document will henceforth adhere to
-when describing the various forms of messages that form the \refOS protocol.
+Protocols are shown as series of messages. Messages are implemented by operations, and the types of different messages directly correlate to the operation types. This section outlines the notation which this document will henceforth adhere to when describing the various forms of messages that form \refOS's protocol.
 
 \subsubsection*{Method Invocation}
 
-Most of the interface methods are synchronous. The client making the call is
-considered to be less trusted than the server that is receiving the call. As
-the client is making the call, it is blocked until the server finished handling
-the call and replies via the reply operation. When the server replies, the call
-is said to be finished and the client resumes execution. Method invocation is
-implemented with the synchronous call operation via a SEP. Capabilities may be
-passed via method invocation, and also via the corresponding reply.
+Most of the interface methods are synchronous. The client making the call is considered to be less trusted than the server that is receiving the call. When a client makes a call, it is blocked until the server finishes handling the call and replies via the reply operation. When the server replies, the call is said to be finished and the client resumes execution. Method invocation is implemented with a synchronous call operation via a synchronous endpoint. Capabilities may be passed via method invocation and also via the corresponding reply.
 
-For synchronous method invocations by a less trusted client to a more trusted
-server, the following notation is used:
+For synchronous method invocations by a less trusted client to a more trusted server, the following notation is used:
 
 \begin{center}
   \pro{server}{interface}{method(arg1, arg2, ...)}{(val1, val2, val3 ...)}
@@ -221,34 +121,22 @@ Where:
 
 \begin{itemize} 
 	\item
-	\srv{server} indicates the name of the server that is receiving and
-	handling the method invocation via an endpoint. Eg. \srv{procserv} and
-	\srv{dataserv} will henceforth be used in method descriptions to referr to
-	a process server and a data server respectively.
+	\srv{server} indicates the name of the server that is receiving and	handling the method invocation via an endpoint. For instance, \srv{procserv} and \srv{dataserv} in method descriptions refer to a process server and a data server respectively
 	
 	\item
 	\obj{interface} refers to the name of the interface that the server
-	implements.
+	implements
 
 	\item
-	\texttt{method(arg1, arg2, ...)} refers to the name of the interface
-	method, \texttt{(arg1, arg2, ...)} representing the arguments of the method
-	call.
+	\texttt{method(arg1, arg2, ...)} refers to the name of the interface method and	the arguments of the method call
 
 	\item
-	\texttt{(val1, val2, val3 ...)} representing the set of return values, output variables
-	and/or reply capabilities of the method invocation.
+	\texttt{(val1, val2, val3 ...)} represents the set of return values, output variables and/or reply capabilities of the method invocation
 \end{itemize}
 
-For example, the notation \met{dataserv}{dataspace}{open} means an invocation
-of the \texttt{open} method of the \obj{dataspace} interface on the server
-called \srv{dataserv}. Note that any \srv{server} can implement a particular
-\obj{interface}.  The encoding of method and arguments in the actual message is
-left as an implementation detail.
+For example, the notation \met{dataserv}{dataspace}{open} means an invocation of the \texttt{open} method of the \obj{dataspace} interface on the server called \srv{dataserv}. Note that any \srv{server} can implement a particular \obj{interface}. The encoding of method and arguments in the actual message is left as an implementation detail.
 
-\autoref{fig:epm} describes an example protocol description (in the form of a
-message sequence diagram) of a client process invoking a method via an
-synchronous message operation:
+\autoref{fig:epm} describes an example protocol description (in the form of a message sequence diagram) of a client process invoking a method via a synchronous message operation:
 
 \begin{figure}[htb]
   \centering
@@ -259,22 +147,15 @@ synchronous message operation:
       C => R [ label = "server\_process\_C.method(13, id)"];
     }
   \end{msc}
-  \caption{Example protocol message sequence diagram.}
+  \caption{Example protocol message sequence diagram}
   \label{fig:epm}
 \end{figure}
 
-\subsubsection*{Event Notification}   
+\subsubsection*{Event Notification}
 
-Some servers need a method of notifying another process without blocking and
-waiting for the other process to finish processing it. Asynchronous signal
-operations via asynchronous endpoints are used to send such notifications to
-other servers. Capabilities may not be transferred via a notification.
+Some servers need a method of notifying another process without blocking and waiting for the other process to finish processing the notification. Asynchronous signal operations via asynchronous endpoints are used to send such notifications to other servers. Capabilities may not be transferred via a notification.
 
-Note that \refOS does not make the assumption that the kernel is able to pass
-message contents via the notification itself, just that the kernel is able
-to pass just the notification. In order for the actual message to be delivered
-along with the notification, the implementation of the protocol may for instance
-make use of a shared buffer.
+Note that \refOS does not make the assumption that the kernel is able to pass message contents via the notification itself, just that the kernel is able to pass just the notification. In order for the actual message to be delivered along with the notification, the implementation of the protocol may for instance make use of a shared buffer.
 
 The following notation is used for event notifications:
 
@@ -282,16 +163,11 @@ The following notation is used for event notifications:
 \met{server}{event}{notify(arg1, ...)}
 \end{center}
 
-This notation is purposely very similar to a method invocation, as those
-two are similar in concept in that they are both inter-process messages.
-The different message sequence diagram arrows used for synch calls
-and async notifications clearly distinguish between the two.
+This notation is purposely very similar to a method invocation as those two are similar in concept in that they are both interprocess messages. The different message sequence diagram arrows used for synchronous calls and asynchronous notifications clearly distinguish the two.
 
-\subsubsection*{Abstracted protocols}
+\subsubsection*{Abstracted Protocols}
 
-Sometimes the protocols are of different level of abstractions. In order to
-separate two closely related protocols in one's sequence diagram, we use the
-following representation as indicated in \autoref{fig:separate_p}:
+Sometimes protocols are of different levels of abstractions. In order to separate two closely related protocols in one's sequence diagram, the representation as indicated in \autoref{fig:separate_p} is used:
 
 \begin{figure}[htb]
   \centering
@@ -303,11 +179,11 @@ following representation as indicated in \autoref{fig:separate_p}:
       A => B [ label = "processB\_object\_C.method(arg, ...)"];
     }
   \end{msc}
-  \caption{Example of separation of protocols.}
+  \caption{Example of separation of protocols}
   \label{fig:separate_p}
 \end{figure}
 
 %%% Local Variables: 
 %%% mode: latex
 %%% TeX-master: t
-%%% End: 
+%%% End:

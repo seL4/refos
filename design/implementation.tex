@@ -10,58 +10,30 @@
 % @TAG(D61_BSD)
 %
 
-This section contains very brief overview of our implementation, which could be useful for anyone
-implementing their own \refOS. For more details, refer to the Doxygen code domentation in our sample
-implementation.
+This section contains a brief overview of \refOS's implementation. For more details, refer to the doxygen code documentation.
 
 % ----------------------------------------------------------------------
 \section{Bootstrapping}
 
 \subsection*{Bootstrapping System Processes}
-While implementing a multi-server OS, one quickly runs across the problem of trying to start
-OS infrastructure with no OS infrastructure in place; The executables are started via a
-bootstrapper app talking to the file server, but how do we start the file server itself?
+While implementing a multi-server operating system, one quickly runs across the problem of trying to start operating system infrastructure with no operating system infrastructure in place. The executables are started via a bootstrapper app talking to the file server, but it can be difficult to start the file server.
 
-In our implementation, we had the process server, being the root task and the most trusted
-component, acting as a mini ELF loader in order to start the file server directly from its own CPIO
-archive. There are several other ways to do this; one being the process server forks a copy of 
-itself to act as the initial file server, or use a kernel which supposed multiple initial
-tasks.
+In \refOS, the process server, being the root task and the most trusted component in the operating system, acts as a mini ELF loader to start the file server directly from its own cpio archive. There are several other methods that one could employ to start the file server. For instance, the process server could fork a copy of itself to act as the initial file server, or the process server could use a kernel which supports multiple initial tasks.
 
 \subsection*{Bootstrapping Client Processes}
-After the system processes have been started, the infrastructure is in place to start userland
-processes. Starting userland processes require IPC communication, and in order to avoid the process
-server directly communication with file servers (which causes backwards dependency), we instead
-use an external bootstrapper. This bootstrapper may be a short-lived process or thread, which
-simple reads the new userland process' ELF file and maps the sections.
+After the system processes have been started, the infrastructure is in place to start userland processes. Starting userland processes requires interprocess communication, and in order to avoid the process server directly communicating with file servers (which causes backwards dependency), \refOS employs an external bootstrapper. The bootstrapper may be a short-lived process or thread which reads the new userland process's ELF file and maps the sections.
 
-In our implementation, we had a tiny bootstrapper called self-loader which was linked into a really
-high reserved virtual address using a linker script, and it simply runs in the same address space as
-the starting client process, setting up the ELF sections in its own address space before directly
-jumping into the client ELF's entry point.
+In \refOS, a small bootstrapper called self-loader is linked into a high reserved virtual address using a linker script. The bootstrapper then runs in the same address space as the starting client process and sets up the ELF sections in its own address space before directly jumping into the client ELF's entry point.
 
 % ----------------------------------------------------------------------
 \section{Communication}
 
-We used the kernel communication mechanisms to implement server interface calls. We used a simple
-Python script RPC stub generator which takes our RefOS interface (extended for extra functionality
-and to make implementation easier) in a simple XML format and generates corresponding C stub code.
-Parameters are marshalled and unmarshalled over the kernel thread IPC buffer. This isn't very
-efficient, but requires the least amount of infrastructure. For long string parameters which 
-are unsuited to the IPC buffer, and notifications, a shared dataspace buffer is used.
+\refOS uses kernel communication mechanisms to implement server interface calls. It runs a simple python script remote procedure call stub generator which takes the \refOS interface (extended for extra functionality and to make implementation easier) in a simple XML format and generates corresponding C stub code. Parameters are marshalled and unmarshalled over the kernel thread interprocess communication buffer. This algorithm is not very efficient, but it requires the least amount of infrastructure. For long string parameters which are unsuited to the interprocess communication buffer and notifications, \refOS takes advantage of a shared dataspace buffer.
 
-For async notifications, a shared dataspace with a one-way ring buffer protocol is used between the
-sender and the reciever. A kernel async endpoint provides synchronisation for the buffer.
+For asynchronous notifications, a shared dataspace with a one-way ring buffer protocol is used between the sender and the reciever. A kernel asynchronous endpoint provides synchronisation for the buffer.
 
 
 % ----------------------------------------------------------------------
 \section{Anonymous Memory}
 
-The process server recieves all the VM fault notifications from the kernel, and delegates it
-accordingly. In our implementation, the process server acts as a data server to implement anonymous
-memory. This simplifies the system, as page faults into content initialised memory only needs one
-single delegation indirection, as opposed to two levels of delegation (first from process server to
-memory server and then from memory server to data server).  alternatively, the process server
-interface and memory server interface may be separated, and the task distributed to another process
-if need be, and this memory server may act as the VM fault reciever.
-
+The process server recieves all the virtual memory fault notifications from the kernel and delegates them accordingly. In \refOS, the process server acts as a data server to implement anonymous memory. Under this implementation, page faults in content initialised memory only need one delegation indirection as opposed to two levels of delegation (first from the process server to the memory server and then from the memory server to the data server). Alternatively, the process server interface and the memory server interface may be separated, and the task may be distributed to another process if need be, and this memory server may act as the VM fault reciever.

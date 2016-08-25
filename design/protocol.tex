@@ -12,10 +12,9 @@
 
 \section{Message Sequences}
 
-This section will provide a series of example message sequences for common tasks, using the protocol
-interfaces described.
+This section provides a series of example message sequences for common tasks using the protocol interfaces described in \autoref{lProtocols} of this document.
 
-\subsection{Server registration}
+\subsection{Server Registration}
 
 \autoref{f:servreg} illustrates the protocol a server uses to register itself under a name.
 
@@ -28,7 +27,7 @@ msc {
     R [ label ="Name Server"],
     S [ label = "Data Server"];
     
-    S box S [ label = "create badged endpoint cap dataserv\_anon\_C"];
+    S box S [ label = "create badged endpoint capability dataserv\_anon\_C"];
  
     S => R [ label = "nameserv\_session\_C.register(\"server\_name\", dataserv\_anon\_C)"];
     R box R [ label = "handle request, register under given name"];
@@ -36,18 +35,14 @@ msc {
 }
 \end{msc}
 \end{center}
-\caption{Server registration.}
+\caption{Server registration protocol}
 \label{f:servreg}
 \end{figure}
 
-\subsection{Establish a session to a server}
+\subsection{Establish a Session to a Server}
 
 
-\autoref{f:estab} illustrates that to interact with a server, one must establish a session with it
-through its anonymous endpoint cap. The end state after establishment should be an established
-session to the server represented by a \obj{session} cap, with the server knowing the security
-subject of the client, and optionally death notification set up so the server knows when the
-client exits and can clean up book-keeping after it.
+\autoref{f:estab} illustrates that to interact with a server one must establish a session with the server through the server's anonymous endpoint capability. An established session with a server is represented by a \obj{session} capability with the server knowing the security subject of the client and optionally death notifications set up so that the server is informed when the client exits and at this time can modify its bookkeeping accordingly.
 
 \begin{figure}[htb]
   \begin{center}
@@ -69,25 +64,22 @@ client exits and can clean up book-keeping after it.
         F=>R [ label = "procserv\_session\_C.watch\_client(procserv\_liveness\_C)"];
         R box R [ label = "set up death notify"];
         R>>F [ label = "(ErrorCode, death\_id, principle\_id)"];
-        F box F [ label = "create session cap for new client"];
+        F box F [ label = "create session capability for new client"];
         F>>C [ label = "(dataserv\_session\_C)"];
       }
     \end{msc}
   \end{center}
-  \caption{Example message sequence for finding \& establishing connection with a server.}
+  \caption{Example message sequence for finding and establishing a connection with a server}
   \label{f:estab}
 \end{figure}
 
-Note the (optional) principle\_id is intended to be used for authentication assuming
-ACL-like security model in the file system.
+Note that the (optional) argument principle\_id is intended to be used for authentication assuming an ACL-like security model in the file system.
 
 \pagebreak
 
-\subsection{Opening and closing a Dataspace}
+\subsection{Opening and Closing a Dataspace}
 
-\autoref{f:openclose} show a sample where a client opens a dataspace which
-could subsequently be used for mapping in a window. After use, it can be
-closed.
+\autoref{f:openclose} shows how a client opens a dataspace which could subsequently be used for mapping in a window. This example also shows how a dataspace is closed.
 
 \begin{figure}[htb]
   \begin{center}
@@ -107,17 +99,14 @@ closed.
       }
     \end{msc}
   \end{center}
-  \caption{Sample protocol for opening and closing a dataspace.}
+  \caption{Sample protocol for opening and closing a dataspace}
   \label{f:openclose}
 \end{figure}
 
 
-\subsection{Map Dataspace in a window}
+\subsection{Map a Dataspace into a Window}
 
-\autoref{f:opendata} shows mapping an open dataspace into a given memory window.  The initialisation
-part sets up the basic components for sample fault delegation in the system.  Note that the process
-server is acting as the memory manager here in this example, as is in our simple implementation. The
-paging could instead go through a separate memory manager process.
+\autoref{f:opendata} shows mapping an open dataspace into a given memory window. The initialisation sets up the components for sample fault delegation in the system.  Note that the process server is acting as the memory manager. The paging could instead be implemented through a separate memory manager process.
 
 \begin{figure}[htb]
   \begin{center}
@@ -135,21 +124,19 @@ paging could instead go through a separate memory manager process.
         C=>P [ label = "dataserv\_session\_C.datamap(dataserv\_dataspace\_C, procserv\_window\_C, offset)"];
         P box P [label = "validate request"];
         P=>R [ label = "procserv\_session\_C.register\_as\_pager(procserv\_window\_C, dataserv\_notify\_C)"];
-        R box R [ label = "book-keep pager information"];
+        R box R [ label = "bookkeep pager information"];
         R>>P [ label = "(ErrorCode, window\_id)"];
         P>>C [ label = "ErrorCode"];
       }
     \end{msc}
   \end{center}
-  \caption{Sample protocol for mapping a dataspace into a given window.}
+  \caption{Sample protocol for mapping a dataspace into a given window}
   \label{f:opendata}
 \end{figure}
 
 \subsection{Page Fault}
 
-\autoref{f:pagefault} show the page fault resolution protocol in the case of an external dataspace
-server backing a window in the client's address space. In our implementation, the \seLf microkernel
-sends the page fault notification to an endpoint cap pretending to be the faulting process.
+\autoref{f:pagefault} shows the page fault resolution protocol in the case of an external dataspace server backing a window in the client's address space. In \refOS, the \seLf microkernel sends the page fault notification to an endpoint capability pretending to be the faulting process.
 
 \begin{figure}[h]
   \begin{center}
@@ -174,15 +161,13 @@ sends the page fault notification to an endpoint cap pretending to be the faulti
       }
     \end{msc}
   \end{center}
-  \caption{Page fault protocol.}
+  \caption{Page fault protocol}
   \label{f:pagefault}
 \end{figure}
 
 \clearpage
-\subsection{Death notification}
-\autoref{f:deathnotify} illustrates an example message sequence for death notification. Note that
-it is assumed that the client is active and has already established connection with the data server
-(see \autoref{f:estab}), and that the data server has since then set up death notification.
+\subsection{Death Notification}
+\autoref{f:deathnotify} illustrates an example death notification protocol. Note that it is assumed that the client is active and has already established a connection with the data server (see \autoref{f:estab}) and that the data server has subsequently set up death notification.
 
 \begin{figure}[h]
 \begin{center}
@@ -198,26 +183,19 @@ it is assumed that the client is active and has already established connection w
     C => P [ label = "procserv\_session\_C.exit(status)" ];
     P box P [ label = "Delete client process" ];
     P >> D [ label = "dataserv\_event\_C.death\_notify(death\_id)" ];
-    D box D [ label = "Delete client session book-keeping" ];
+    D box D [ label = "Delete client session bookkeeping" ];
   }
 \end{msc}
 \end{center}
-\caption{Example death notification.}
+\caption{Example death notification protocol}
 \label{f:deathnotify}
 \end{figure}
 
 \subsection{Dataspace Sharing}
 
-\autoref{f:sharedata} is an example of how to set up a shared dataspace. Note that the assumption is
-that the share is not revocable and that sharing is with someone who is trusted. So given two
-clients, one must trust the other, or both must trust the other. Mutual distrust is not supported
-yet simply as cap transfer to an untrusted entity requires more than a direct call.
+\autoref{f:sharedata} is an example of how to set up a shared dataspace. Note that it is assumed that the share is not revocable and that sharing is with an entity that is trusted. Therefore, given two clients, at least one of the clients must trust the other client. Mutual distrust is not supported yet because capability transfer to an untrusted entity requires more than a direct call.
 
-Dataspace sharing is used to implement 
-
-In this example, the shared dataspace is implemented by the process server (acting as the memory
-manager), and is shared with a server. This is would be typical for a shared memory communication
-buffer.
+In this example, the shared dataspace is implemented by the process server (acting as the memory manager) and is shared with a server. This is typical for a shared memory communication buffer.
 
 \begin{figure}[h]
   \begin{center}
@@ -236,26 +214,24 @@ buffer.
         R>>C [ label = "(ErrorCode, procserv\_window\_C)"];
         C=>R [ label = "procserv\_session\_C.datamap(procserv\_dataspace\_C, procserv\_window\_C, offset)"];
         R>>C [ label = "ErrorCode"];
-        --- [ label = "Share to dataspace cap with server"];
+        --- [ label = "Share to dataspace capability with server"];
         C=>D [ label = "serv\_session\_C.datashare(procserv\_dataspace\_C)"];
         D=>R [ label = "procserv\_process\_C.Create\_mem\_window(base, flags, mode, size)"];
         R>>D [ label = "(ErrorCode, procserv\_window2\_C)"];
         D=>R [ label = "procserv\_session\_C.datamap(procserv\_dataspace\_C, procserv\_window2\_C, offset)"];
         R>>D [ label = "ErrorCode"];
         D>>C [ label = "ErrorCode"];
-        D abox C [ label = "Communicate using shared dataspace." ];
+        D abox C [ label = "Communicate using shared dataspace" ];
       }
     \end{msc}
   \end{center}
-  \caption{Sample protocol for sharing an anonymous dataspace.}
+  \caption{Sample protocol for sharing an anonymous dataspace}
   \label{f:sharedata}
 \end{figure}
 
 \clearpage
 
-In the \autoref{f:sharedatathird} example, the dataspace is implemented not by the process server,
-but instead an external data server. Thus, a third party is involved in this case. This is a more
-general example of \autoref{f:sharedata}.
+\autoref{f:sharedatathird} provides another example of dataspace sharing. In this example, the dataspace is implemented by an external data server instead of by the process server. A third party is involved in this case. This is a more general example of \autoref{f:sharedata}.
 
 \begin{figure}[h]
   \begin{center}
@@ -276,7 +252,7 @@ general example of \autoref{f:sharedata}.
         R>>CA [ label = "(ErrorCode, procserv\_window\_C)"];
         CA=>D [ label = "dataserv\_session\_C.datamap(dataserv\_dataspace\_C, procserv\_window\_C, offset)"];
         D=>R [ label = "procserv\_session\_C.register\_as\_pager(procserv\_window\_C, dataserv\_notify\_C)"];
-        R box R [ label = "Book-keep pager information"];
+        R box R [ label = "Bookkeep pager information"];
         R>>D [ label = "(ErrorCode, window\_id)"];
         D>>CA [ label = "ErrorCode"];
 
@@ -288,7 +264,7 @@ general example of \autoref{f:sharedata}.
         R>>CB [ label = "(ErrorCode, procserv\_window2\_C)"];
         CB=>D [ label = "dataserv\_session\_C.datamap(dataserv\_dataspace\_C, procserv\_window2\_C, offset)"];
         D=>R [ label = "procserv\_session\_C.register\_as\_pager(procserv\_window2\_C, dataserv\_notify\_C)"];
-        R box R [ label = "Book-keep pager information"];
+        R box R [ label = "Bookkeep pager information"];
         R>>D [ label = "(ErrorCode, window\_id)"];
         D>>CB [ label = "ErrorCode"];
 
@@ -297,18 +273,14 @@ general example of \autoref{f:sharedata}.
       }
     \end{msc}
   \end{center}
-  \caption{Sample protocol for sharing a dataspace provided by
-    dataspace server between two clients.}
+  \caption{Sample protocol for sharing a dataspace provided by a dataspace server}
   \label{f:sharedatathird}
 \end{figure}
 
 \clearpage
 \subsection{Content Initialise a Dataspace with Another Dataspace}
 
-\autoref{f:initdata} shows creating a dataspace and setting it so that it is initialised by the
-content of another. Out example initialises a RAM dataspace (with the process server acting as its
-data server, as per our implementation) with the contents of an executable file from another
-dataspace.
+\autoref{f:initdata} shows creating a dataspace and setting the dataspace so that it is initialised with the contents of another dataspace. This example initialises a RAM dataspace (with the process server acting as its data server as per \refOS's implementation) with the contents of an executable file from another dataspace.
 
 \begin{figure}[htb]
   \begin{center}
@@ -330,9 +302,9 @@ dataspace.
 
         --- [ label = "Initialise procserv dataspace with dataserv dataspace"];
         C=>D [ label = "dataserv\_session\_C.init\_data(procserv\_dataspace\_C, dataserv\_dataspace\_C, src\_offset)"];
-        D box D [label = "Validate request and book-keep dataspace relationship"];
+        D box D [label = "Validate request and bookkeep dataspace relationship"];
         D=>P [ label = "procserv\_process\_C.have\_data(procserv\_dataspace\_C, dataserv\_notify\_C)"];
-        P box P [ label = "Book-keep pager information"];
+        P box P [ label = "Bookkeep pager information"];
         P>>D [ label = "(ErrorCode, data\_id)"];
         D>>C [ label = "ErrorCode"];
 
@@ -346,21 +318,14 @@ dataspace.
       }
     \end{msc}
   \end{center}
-  \caption{Sample protocol for creating a dataspace initialised with the contents of another.}
+  \caption{Sample protocol for creating a dataspace initialised with the contents of another dataspace}
   \label{f:initdata}
 \end{figure}
 
 \clearpage
-\subsection{Content Initialisated Page Fault}
+\subsection{Content Initialised Page Fault}
 
-\autoref{f:initfault} show the page fault resolution protocol in the case of an external dataspace
-server providing the initial data for the dataspace. Note the similarity with \autoref{f:pagefault};
-although different in concept, these two are similar in nature and may share a lot in
-implementation. The subtle yet importance difference between the two is that for
-\texttt{provide\_data} the content in the given frame is only read but not used; it is read and
-copied to the receiving dataserver's own dataspace. This is in contrast to \texttt{window\_map}
-which actually uses the given frame and maps the same physical frame into the client's address space
-to resolve the fault.
+\autoref{f:initfault} illustrates the page fault resolution protocol in the case of an external dataspace server providing the initial data for the dataspace. Note the similarity with \autoref{f:pagefault}. The difference between the two protocols is that in the content initialised page fault protocol the content in the frame provided by the data server is not used by the client; instead the content of the frame is copied to the receiving dataserver's dataspace. In contrast, the regular page fault protocol directly maps the physical frame into the client's address space.
 
 \begin{figure}[htb]
   \begin{center}
@@ -385,7 +350,7 @@ to resolve the fault.
       }
     \end{msc}
   \end{center}
-  \caption{Data content initialisation fault protocol.}
+  \caption{Data content initialisation fault protocol}
   \label{f:initfault}
 \end{figure}
 
@@ -426,26 +391,18 @@ to resolve the fault.
       }
     \end{msc}
   \end{center}
-  \caption{Elf loading protocol.}
+  \caption{Elf loading protocol}
   \label{f:elfloading}
 \end{figure}
 
 \clearpage
 \section{Data Structures}
 
-This section will provide a series of example data structures for \refOS. These are only meant to be
-a guideline, and will be presented in the C language. The data structures here aim to be the minimal
-information such a structure should store, for a rough idea of what these objects represent.
-Implementations may need to add extra members and references to these data structures to make
-internal book-keeping easier.
+This section provides an approximate representation of a number of data structures that \refOS employs. These data structures are only meant to be a guideline and are presented in the C language. These data structures aim to be the minimal information such a structure should store and intend to convey an idea of what these objects represent. Implementations may need to add extra members and references to these data structures to allow for internal bookkeeping.
 
-\subsection {Memory window}
+\subsection {Memory Window}
 
-A window should book-keeps its state, which vspace it belongs to, where and how long the segment is,
-and the state of its contents. A window my be unmapped, or mapped to a dataspace (and that dataspace
-may be content initialised). In our implementation, the process server was also the anonymous
-memory dataserver, so this window structure has extra book-keeping for internal anonymous dataspace
-mapping state. Also, our implementation separated offset + size from a window.
+A memory window should bookkeep its state, which vspace it belongs to, where and how long the memory segment is and the state of the memory window's contents. A memory window may be unmapped or mapped to a dataspace, and that dataspace may or may not be content initialised. In \refOS, the process server is the anonymous memory dataserver, so in \refOS the memory window data structure has extra bookkeeping information for the internal anonymous dataspace mapping state. Also, \refOS separates the memory window's size and offset into multiple windows.
 
 \begin{verbatim}
 struct w_window {
@@ -459,12 +416,9 @@ struct w_window {
 };
 \end{verbatim}
 
-\subsection {Process control block}
+\subsection {Process Control Block}
 
-A process structure should book-keep its address space (capability space and virtual memory space),
-its threads, and clients is it watching. In our implementation we also added parameter buffers,
-notification ring buffers, process' OS system capabilities bitmask, parent, debug name, and so
-forth.
+A process control block data structure should bookkeep its address space (capability space and virtual memory space), its threads and the clients it is watching. \refOS also contains parameter buffers, notification ring buffers, the process operating system capabilities bitmask, the parent process's ID, the debug name and a number of other bookkeeping parameters.
 
 \begin{verbatim}
 struct proc_pcb {
@@ -474,13 +428,9 @@ struct proc_pcb {
 };
 \end{verbatim}
 
-\subsection {Anonymous dataspace}
+\subsection {Anonymous Dataspace}
 
-An anonymous dataspace would need to book keep its capability, list of frame pages it is
-representing, and the content initialisation data. The content initialisation bitmask keeps which
-pages in the dataspace have been initialised, and which still need to be initialised. Initialisation
-happens lazily, on the first VM fault, so a waiting list of clients that are VM fault blocked
-waiting for content to be initialised needs to be kept.
+An anonymous dataspace data structure needs to bookkeep its capability, the list of frame pages it is representing and its content initialisation data. The content initialisation bitmask records which pages in the dataspace have been initialised and which still need to be initialised. Initialisation happens lazily, on the first VM fault, so a waiting list of clients that are VM fault blocked waiting for content to be initialised needs to be recorded.
 
 \begin{verbatim}
 struct ram_dspace {
@@ -493,11 +443,9 @@ struct ram_dspace {
 };
 \end{verbatim}
 
-\subsection {Archived file server dataspace}
+\subsection {Archived File Server Dataspace}
 
-This dataspace assumes that there is a char* storing the file data somewhere in the process server's
-address space. In our implementation this came from a CPIO format archive linked into the process's
-ELF sections.
+An archived file server dataspace assumes that there is a char* storing the file data somewhere in the process server's address space. In \refOS, this comes from a cpio format archive linked into the process's ELF sections.
 
 \begin{verbatim}
 struct fs_dataspace {
@@ -509,10 +457,9 @@ struct fs_dataspace {
 };
 \end{verbatim}
 
-\subsection {Userland dataspace mapping}
+\subsection {Userland Dataspace Mapping}
 
-This is the example data structure for a userland dataspace mapping. The window, dataspace, and
-session are book-kept, along with the virtual address and size of the window segment.
+A userland dataspace mapping data strucure must bookkeep its window, dataspace and session and the virtual address and size of the memory window segment.
 
 \begin{verbatim}
 typedef struct data_mapping {

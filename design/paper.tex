@@ -28,6 +28,7 @@
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \usepackage{msctexen}
+\usepackage{indentfirst}
 
 %%% $Id: paper.tex,v 1.22 2008-07-19 08:14:55 gernot Exp $
 
@@ -111,13 +112,11 @@
     RefOS --- Reference Design For A Microkernel Based Operating System
 }
 
-\author {Kevin Elphinstone, Andi Cheng and Xi Chen}
+\author {Kevin Elphinstone}
 \AuthorEmail {
-    Kevin.Elphinstone@nicta.com.au,
-    Andi.Cheng@nicta.com.au,
-    XiMa.Chen@nicta.com.au
+    Kevin.Elphinstone@data61.csiro.au
 }
-\date{\today}
+\date{August 31, 2016}
 
 \begin{titlepage}
 \maketitle
@@ -129,35 +128,33 @@
 \begin{abstract}
   \pagenumbering{roman}
 
-  The design of a multi-server operating system is crucial to its efficiency, security and
-  dependability. Increasing usage of embedded systems and microcontroller chips has increased the
-  interest from both industrial and academic communities in microkernel-based component-based
-  software systems. This has resulted in heightened interest in developing better systems and more
-  advanced microkernels.
-  
-  This document outlines a basic reference design for system components and interfaces for an
-  operating system. The protocols have been designed with an \Lf like microkernel in mind, assuming
-  functionality such as inter-thread IPC messaging, capability-based access models, virtual memory
-  support, and so forth. The reference design aims towards standardising the protocols for tasks
-  often required to build a system such as sharing, virtual memory management, and naming. Operating
-  systems may implement these protocols and / or extend it to incorporate more features.
+  The design of a multi-server operating system is crucial to its efficiency, security and dependability. Increasing usage of embedded systems and microcontroller chips has increased the interest from both industrial and academic communities in microkernel-based component-based software systems. This has resulted in heightened interest in developing better systems and more advanced microkernels.
 
-  A sample implementation of the protocol is provided, in the form of a simple OS able to run simple
-  client programs. The sample implementation uses the \seLf microkernel, adding an extra dimension
-  of dependability.
+  This document outlines a basic reference design for system components and interfaces for an operating system. The protocols have been designed with an \Lf like microkernel in mind and assume functionality such as interprocess communcation, capability-based access models and virtual memory support. This reference design aims to standardise the protocols for tasks often required to build a system such as resource sharing, virtual memory management and naming. Operating systems may implement these protocols and extend them to incorporate more features.
+
+  A sample implementation of the following protocols is provided in addition to this document in the form of a simple operating system which runs simple client programs. The sample implementation, named \refOS, runs on the \seLf microkernel, which adds an extra dimension of dependability. Although this document outlines the major design strategies that \refOS employs, the doxygen code documentation provides additional details about \refOS.
 
   \vfill
-  
-  \noindent
+
   \copyright~2016 Data61, CSIRO
 \end{abstract}
-\setcounter{page}{1}
 
+\newcommand{\contributors}{
+    \begin{center}
+        \textbf{Contributors}
+    \end{center}
+    The following people have contributed to this document:
+    \begin{itemize}
+        \item Kevin Elphinstone
+        \item Andi Cheng
+        \item Xi Chen
+        \item Alexander Wharton
+    \end{itemize}
 
+    \clearpage
+}
+\contributors
 \tableofcontents
-
-\setcounter{page}{1}
-\pagenumbering{arabic}
 
 \newcommand{\srv}[1]{\textcolor{refos_dpurple}{\texttt{#1}}}
 \newcommand{\obj}[1]{\texttt{#1}}
@@ -169,6 +166,8 @@
 }
 
 \chapter{Introduction}
+\setcounter{page}{1}
+\pagenumbering{arabic}
 \label{s:intro}
 \input{intro}
 
@@ -186,11 +185,7 @@
 
 \chapter{\label{s:concl}Conclusions}
 
-We have presented a reference design for a multi-server OS designed for an \texttt{L4} based
-microkernel. We have outlined a set of minimal design abstractions and methodologies which state
-a standard protocol for common tasks, and provided sample message sequences.
-On top of this, we provide a documented sample implementation of this protocol, in the form of a
-small OS.
+This paper presents a reference design for a multi-server operating system designed for an \texttt{L4} based microkernel. It outlines a set of minimal design abstractions and methodologies which provide a standard protocol for common tasks and sample message sequences. In addition to this document, \refOS provides a documented sample implementation of this protocol. For more information about \refOS, refer to the doxygen code documentation.
 
 %\cleardoublepage
 %\bibliographystyle{alpha}
