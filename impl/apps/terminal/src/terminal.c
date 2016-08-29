@@ -1,11 +1,13 @@
 /*
- * Copyright 2014, NICTA
+ * Copyright 2016, Data61
+ * Commonwealth Scientific and Industrial Research Organisation (CSIRO)
+ * ABN 41 687 119 230.
  *
  * This software may be distributed and modified according to the terms of
  * the BSD 2-Clause license. Note that NO WARRANTY is provided.
  * See "LICENSE_BSD2.txt" for details.
  *
- * @TAG(NICTA_BSD)
+ * @TAG(D61_BSD)
  */
 
 #include <stdio.h>
@@ -52,7 +54,7 @@ terminal_startup_message(void)
            "  \\/_/ /_/   \\/_____/   \\/_/     \\/_____/   \\/_____/ \n\n"
            "-----------------------------------------------------\n"
            "    Built on the seL4 microkernel.\n"
-           "    (c) Copyright 2014 NICTA.\n"
+           "    (c) Copyright 2016 Data61, CSIRO\n"
            "-----------------------------------------------------\n");
 }
 
