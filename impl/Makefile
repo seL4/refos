@@ -87,12 +87,12 @@ cscope: clean
 docs: generate-rpc clean
 	@echo "[DOXYGEN] Generating docs..."
 	cd docs/; make
-	@echo "[DOXYGEN] OK. Please point your browser at file://$(PWD)/docs/html/index.html"
+	@echo "[DOXYGEN] OK. Please open file '$(PWD)/docs/html/index.html' in a web browser"
 
 design:
 	@echo "[DESIGN] Generating RefOS procotol design document..."
 	cd projects/refos/design/; make clean; make
-	@echo "[DESIGN] OK. Please take a look at file://$(PWD)/projects/refos/design/paper.pdf"
+	@echo "[DESIGN] OK. Please open file '$(PWD)/projects/refos/design/paper.pdf'"
 
 # QEMU simulation helpers.
 simulate-kzm:
@@ -112,21 +112,25 @@ simulate-ia32-graphics:
 # Help
 .PHONY: help
 help:
-	@echo "RefOS - Reference multi-server OS on seL4."
+	@echo "RefOS - Reference Design For A Microkernel Based Operating System"
 	@echo ""
-	@echo " make help            - Show this help test."
-	@echo " make menuconfig      - Select build configuration via menus."
-	@echo " make <defconfig>     - Apply one of the default configurations. See"
-	@echo "                        below for valid configurations."
-	@echo " make silentoldconfig - Update configuration with the defaults of any"
-	@echo "                        newly introduced settings."
-	@echo " make                 - Build everything with the current configuration."
-	@echo " make generate-rpc    - Generate RPC stubs from XML specs."
-	@echo " make clean-rpc       - Delete generated RPC stubs."
-	@echo " make refos           - Build RefOS without re-generating RPC stub code."
-	@echo " make cscope          - Build cscope.out index file using cscope."
-	@echo " make docs            - Build docs/html/ Doxygen code documentation."
-	@echo " make design          - Build protocol design document."
+	@echo " make help                   - Show this help menu."
+	@echo " make menuconfig             - Select build configuration via menus."
+	@echo " make <defconfig>            - Apply one of the default configurations. See"
+	@echo "                               below for valid configurations."
+	@echo " make silentoldconfig        - Update configuration with the defaults of any"
+	@echo "                               newly introduced settings."
+	@echo " make                        - Build everything with the current configuration."
+	@echo " make generate-rpc           - Generate RPC stubs from XML specifications."
+	@echo " make clean-rpc              - Delete generated RPC stubs."
+	@echo " make refos                  - Build RefOS without re-generating RPC stub code."
+	@echo " make cscope                 - Build cscope.out index file using cscope."
+	@echo " make docs                   - Build docs/html/ Doxygen code documentation."
+	@echo " make design                 - Build protocol design document."
+	@echo " make simulate-kzm           - Boot kzm configured system image."
+	@echo " make simulate-ia32          - Boot ia32 configured system image."
+	@echo " make simulate-ia32-graphics - Boot ia32 configured system image in new console."
+	@echo ""
 	@echo ""
 	@echo "Valid default configurations are:"
 	@ls -1 configs | sed -e 's/\(.*\)/\t\1/g'
