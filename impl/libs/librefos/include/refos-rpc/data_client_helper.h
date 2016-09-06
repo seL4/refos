@@ -54,6 +54,7 @@ typedef struct data_mapping {
 
 /*! @brief Helper function to open a dataspace, allocate a window to map into, then map it there.
     @param session The client connection session to the dataspace server.  (No ownership)
+    @param name The name of the dataspace server.
     @param flags The read / write / create flags.
     @param mode The mode to create new file with, in the case that a new one is created.
     @param size The size of mapping window.
@@ -124,7 +125,7 @@ exit0:
     return d;
 }
 
-/*! @brief Release a data mapping previous initialised by data_open_map(). 
+/*! @brief Release a data mapping previous initialised by @ref data_open_map. 
     @param d The previously mapped dataspace. (Takes ownership)
     @return ESUCCESS on success, refos_err_t error otherwise.
 */

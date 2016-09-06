@@ -23,7 +23,7 @@
 /*! @file
     @brief RefOS port of Micro Tetris.
     
-    <h1> RefOS Tetris </h2>
+    <h1> RefOS Tetris </h1>
     
     A classic Tetris clone, heavily based on (a port of)
     Micro Tetris by Joachim Nilsson <joachim.nilsson@vmlinux.org>,

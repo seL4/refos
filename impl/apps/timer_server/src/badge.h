@@ -20,7 +20,7 @@
 
     Since Timer server needs to recieve both asynchronous device IRQ and synchronous syscall
     messages, similar to the console server. The solution is thus also similar to console server.
-    Please look in @ref console_server/badge.h for a more detailed explanation.
+    Please look in @ref console_server/src/badge.h for a more detailed explanation.
 */
 
 #define TIMESERV_DSPACE_BADGE_TIMER 0x26    /*!< @brief Timer dataspace badge value. */

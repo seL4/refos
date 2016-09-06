@@ -87,7 +87,9 @@ void rpc_setup_recv(cslot recv_cslot);
 /**
  * Use the given cslot as the destination slot for cap transfer. This version does not assume
  * default cspace.
- * @param[in] recv_cslot CSpace slot to use to recieve caps.
+ * @param[in] cspace Root of the thread's CSpace.
+ * @param[in] recv_cslot Address of CSpace slot to use to recieve caps.
+ * @param[in] depth Number of bits of the capability address to be translated.
  */
 void rpc_setup_recv_cspace(seL4_CPtr cspace, seL4_CPtr recv_cslot, seL4_Word depth);
 
@@ -190,7 +192,7 @@ void rpc_pop_buf_array(void* v, size_t sz, uint32_t count);
 
 /**
  * Invoke the server. The destination endpoint may be automatically determined from the label for
- * simplicity, unless overridden by a call to @ref rpc_custom_dest.
+ * simplicity, unless overridden by a call to @ref rpc_set_dest.
  * @return             0 on success, non-zero otherwise.
  */
 int rpc_call_server();

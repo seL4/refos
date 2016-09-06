@@ -1,76 +1,65 @@
 
 /*! @page components Components
 
-RefOS embraces the component-based multi-server OS design. The two main components are process
-server and fileserver. The process server runs as the initial thread, and is responsible for
-starting up the rest of the sysem. Other components of the system can be anything from clients,
-device drivers, file servers, terminal programs, tetris ...etc.
+RefOS embraces the component-based multi-server operating system design. RefOS's two main components are a process server and a fileserver. The process server runs as the initial thread, and it is responsible for starting the rest of the sysem. Other components of the system include clients, device drivers, file servers, terminal programs, tetris and snake.
 
-@image html component_design.png "Fig. 2 - Components concept."
+@image html component_design.png "Figure 1 - RefOS Components"
 
 @section procserv Process server
-@image html procserv.png
+@image html procserv.png "Figure 2 - Process Server"
 
-The process server is the most trusted component in the system. It runs as the initial kernel thread
-and does not depend on any other component (this avoids deadlock). The process server implementation
-is single-threaded. 
-The process server also implements the dataspace interface for anonymous memory, and acts as
-the memory manager.
+The process server is the most trusted component in the system. It runs as the initial kernel thread and does not depend on any other component (this avoids deadlock). The process server implementation is single-threaded. The process server also implements the dataspace interface for anonymous memory and acts as the memory manager.
 
 The process server implements the following interfaces:
 
 <ul>
-    <li> Process server interface. (naming, mem. windows, processes..etc) </li>
-    <li> Dataspace server interface. (For anonymous memory) </li>
-    <li> Name server interface (Acts as the root name server) </li>
+    <li> Process server interface (naming, memory windows, processes and so on) </li>
+    <li> Dataspace server interface (for anonymous memory) </li>
+    <li> Name server interface (acts as the root name server) </li>
 </ul>
 
-<center><h2>See code here: @ref main.c</h2></center>
+<center>See code here: @ref apps/process_server/src/main.c </center>
 
-@section fileserv CPIO File server
-@image html fileserv.png
+@section fileserv File server
+@image html fileserv.png "Figure 3 - File Server"
 
-The cpio file server is more trusted than clients, but less trusted than the process server (avoids
-deadlock). The current implementation does not use a disk driver, and the actual file contents are
-compiled into the file server executable itself using a CPIO archive.
+The file server is more trusted than clients, but it is less trusted than the process server (this avoids deadlock). In RefOS, the file server does not use a disk driver, and the actual file contents are compiled into the file server executable itself using a cpio archive. The file server acts as the main data server in the system.
 
-The cpio file server implements the following interfaces:
+The file server implements the following interfaces:
 
 <ul>
-    <li> Dataspace server interface. (for stored file data) </li>
-    <li> Server connection interface. (for clients to connect to it) </li>
+    <li> Dataspace server interface (for stored file data) </li>
+    <li> Server connection interface (for clients to connect to it) </li>
 </ul>
 
-<center><h2>See code here: @ref file_server.c</h2></center>
+<center>See code here: @ref apps/file_server/src/file_server.c </center>
 
 @section conserv  Console Server
-@image html conserv.png
+@image html conserv.png "Figure 4 - Console Server"
 
-The Console server provides serial / EGA input & output functionality, exposed through
-the dataspace interface. It also provides terminal emulation for EGA screen output.
+The console server provides serial and EGA input and output functionality, which is exposed through the dataspace interface. The console server also provides terminal emulation for EGA screen output.
 
-The Console server implements the following interfaces:
+The console server implements the following interfaces:
 
 <ul>
-    <li> Dataspace server interface. (for serial input / output, and EGA screen devices) </li>
-    <li> Server connection interface. (for clients to connect to it) </li>
+    <li> Dataspace server interface (for serial input and output and EGA screen devices) </li>
+    <li> Server connection interface (for clients to connect to it) </li>
 </ul>
 
-<center><h2>See code here: @ref console_server.c</h2></center>
+<center>See code here: @ref apps/console_server/src/console_server.c </center>
 
 @section timeserv  Timer Server
-@image html timeserv.png
+@image html timeserv.png "Figure 5 - Timer Server"
 
-The Timer server provides timer gettime & sleep functionality, exposed through
-the dataspace interface.
+The timer server provides timer get time and sleep functionality, which is exposed through the dataspace interface.
 
-The Timer server implements the following interfaces:
+The timer server implements the following interfaces:
 
 <ul>
-    <li> Dataspace server interface. (for timer devices) </li>
-    <li> Server connection interface. (for clients to connect to it) </li>
+    <li> Dataspace server interface (for timer devices) </li>
+    <li> Server connection interface (for clients to connect to it) </li>
 </ul>
 
-<center><h2>See code here: @ref timer_server.c</h2></center>
+<center>See code here: @ref apps/timer_server/src/timer_server.c </center>
 
 */

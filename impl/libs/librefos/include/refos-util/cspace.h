@@ -41,7 +41,7 @@ void csalloc_init(seL4_CPtr start, seL4_CPtr end);
     @param end The end of the cslot range to allocate from.
     @param buffer The static buffer to use. Must be at least ( sizeof(seL4_CPtr) * (start - end) )
                   bytes large. (No ownership)
-    @param buffersz The size of the static buffer.
+    @param bufferSz The size of the static buffer.
 */
 void csalloc_init_static(seL4_CPtr start, seL4_CPtr end, char* buffer, uint32_t bufferSz);
 

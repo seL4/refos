@@ -19,7 +19,7 @@
    vspace address conflicts with the booting process, the Sselfloader process linker script compiles
    it into a very high RefOS reserved region, away from the vspace of the booting process.
 
-   See \ref Bootup
+   See \ref Startup
 */
 
 #include <string.h>

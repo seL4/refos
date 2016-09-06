@@ -116,8 +116,8 @@ proc_new_async_endpoint_badged(int badge) {
            proc_create_mem_window_internal().
     @param vaddr The window base address in the calling client's VSpace.
     @param size The size of the mem window.
-    @param permissions The read / write permission bitmask.
-    @param permissions The flags bitmask (cached / uncached).
+    @param permission The read / write permission bitmask.
+    @param flags The flags bitmask (cached / uncached).
     @return Capability to created window if success, 0 otherwise (errno will be set).
 */
 static inline seL4_CPtr

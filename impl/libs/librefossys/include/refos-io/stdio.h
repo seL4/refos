@@ -23,7 +23,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
-/*! @brief Whether to translate the return key into a '\n' from a '\r'. */
+/*! @brief Whether to translate the return key into a "\n" from a "\r". */
 extern bool refos_stdio_translate_stdin_cr;
 
 typedef size_t (*stdio_read_fn_t)(void *data, size_t count);
