@@ -20,7 +20,6 @@
 #include <refos-util/dprintf.h>
 #include <refos/refos.h>
 #include <refos/vmlayout.h>
-#include <syscall_stubs_sel4.h>
 #include <autoconf.h>
 #include "stdio_copy.h"
 
@@ -61,8 +60,6 @@ void refos_initialise_selfloader(void)
 void
 refos_initialise(void)
 {
-    SET_MUSLC_SYSCALL_TABLE;
-
     /* Temporarily use seL4_DebugPutChar before printf is set up. On release kernel this will
        do nothing. */
     refos_seL4_debug_override_stdout();

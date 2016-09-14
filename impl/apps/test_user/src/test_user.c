@@ -25,7 +25,6 @@
 #include <refos-io/stdio.h>
 #include <refos-util/init.h>
 #include <refos/sync.h>
-#include <syscall_stubs_sel4.h>
 
 /* Debug printing. */
 #include <refos-util/dprintf.h>

@@ -36,7 +36,6 @@
 #include <refos-util/cspace.h>
 #include <refos-util/init.h>
 #include <refos-util/walloc.h>
-#include <syscall_stubs_sel4.h>
 
 #include "test_fileserv.h"
 #include "test_anon_ram.h"
@@ -480,7 +479,6 @@ int
 main()
 {
 #ifdef CONFIG_REFOS_RUN_TESTS
-    SET_MUSLC_SYSCALL_TABLE;
     refosio_setup_morecore_override(mmapRegion, MMAP_SIZE);
     refos_initialise_os_minimal();
     refos_setup_dataspace_stdio(REFOS_DEFAULT_STDIO_DSPACE);

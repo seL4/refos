@@ -137,7 +137,6 @@ proc_server_loop(void)
 int
 main(void)
 {
-    SET_MUSLC_SYSCALL_TABLE;
     initialise(seL4_GetBootInfo(), &procServ);
     dprintf("======== RefOS Process Server ========\n");
 

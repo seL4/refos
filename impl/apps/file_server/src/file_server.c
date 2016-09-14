@@ -123,7 +123,6 @@ fileserv_mainloop(void)
 /*! @brief Main CPIO file server entry point. */
 int
 main() {
-    SET_MUSLC_SYSCALL_TABLE;
     refosio_setup_morecore_override(mmapRegion, MMAP_SIZE);
     refos_initialise_os_minimal();
     refos_setup_dataspace_stdio(REFOS_DEFAULT_STDIO_DSPACE);
