@@ -16,12 +16,7 @@ process_server-y                    = common libsel4 libmuslc libsel4allocman li
                                       libsel4platsupport libsel4muslcsys libsel4utils \
                                       libcpio libelf librefos libdatastruct libsel4simple \
                                       libsel4vspace libsel4utils libutils libsel4vspace
-                                      
-# Set up correct simple lib for our kernel
-ifdef CONFIG_KERNEL_STABLE
-process_server-$(CONFIG_LIB_SEL4_SIMPLE_STABLE) += libsel4simple-stable
-else
+
 process_server-$(CONFIG_LIB_SEL4_SIMPLE_DEFAULT) += libsel4simple-default
-endif
 
 process_server: kernel_elf $(process_server-y)

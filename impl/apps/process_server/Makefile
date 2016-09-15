@@ -32,12 +32,7 @@ NK_CFLAGS += -std=gnu99 -O2
 LIBS := c sel4 sel4muslcsys sel4allocman sel4platsupport sel4vka elf cpio refos sel4utils \
       datastruct sel4simple utils platsupport sel4vspace
 
-# Set up correct simple lib for our kernel
-ifdef CONFIG_KERNEL_STABLE
-LIBS += sel4simple-stable
-else
 LIBS += sel4simple-default
-endif
 
 HDRFILES += $(wildcard ${SOURCE_DIR}/*) \
 

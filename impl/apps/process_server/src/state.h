@@ -30,13 +30,8 @@
 #include <refos-util/nameserv.h>
 #include <sel4platsupport/platsupport.h>
 #include <data_struct/chash.h>
-
 #include <simple/simple.h>
-#ifdef CONFIG_KERNEL_STABLE
-    #include <simple-stable/simple-stable.h>
-#else
-    #include <simple-default/simple-default.h>
-#endif
+#include <simple-default/simple-default.h>
 
 #include "common.h"
 #include "system/process/pid.h"
