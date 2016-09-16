@@ -14,6 +14,7 @@
 #include "common.h"
 #include <simple/simple.h>
 #include <sel4platsupport/platsupport.h>
+#include <sel4debug/debug.h>
 #include <autoconf.h>
 #include <refos/refos.h>
 #include <refos-rpc/rpc.h>
@@ -47,43 +48,8 @@ initialise_welcome_message(seL4_BootInfo *info)
     dprintf("  Built on "__DATE__" "__TIME__".\n");
     dprintf("  © Copyright 2016 Data61, CSIRO\n");
     dprintf("=====================================================\n");
-    
 
-    /* Print boot info from kernel. */
-    dprintf("Node ID: %d (of %d)\n",info->nodeID, info->numNodes);
-    dprintf("initThreadCNode size: %d slots\n", (1 << info->initThreadCNodeSizeBits) );
-    dprintf("initMemPool size: %d bytes (%d pages)\n", CONFIG_PROCSERV_INITIAL_MEM_SIZE,
-            (CONFIG_PROCSERV_INITIAL_MEM_SIZE / REFOS_PAGE_SIZE));
-    
-    dprintf("\n");
-    dprintf("--- Capability Details ---\n");
-    dprintf("Type              Start      End\n");
-    dprintf("Empty             0x%08x 0x%08x\n", info->empty.start, info->empty.end);
-    dprintf("Shared frames     0x%08x 0x%08x\n", info->sharedFrames.start, info->sharedFrames.end);
-    dprintf("User image frames 0x%08x 0x%08x\n", info->userImageFrames.start,
-            info->userImageFrames.end);
-    dprintf("User image PTs    0x%08x 0x%08x\n", info->userImagePTs.start, info->userImagePTs.end);
-    dprintf("Untypeds          0x%08x 0x%08x\n", info->untyped.start, info->untyped.end);
-    dprintf("Device Regions    0x%08x 0x%08x\n", info->deviceUntyped.start, info->deviceUntyped.end);
-    
-    dprintf("\n");
-    dprintf("--- Untyped Details ---\n");
-    dprintf("Untyped Slot       Paddr      Bits\n");
-    int numUntyped = info->untyped.end - info->untyped.start;
-    for (int i = 0; i < numUntyped; i++) {
-        dprintf("%3x     0x%08x 0x%08x %d\n", i, info->untyped.start+i, info->untypedPaddrList[i],
-                info->untypedSizeBitsList[i]);
-    }
-    
-    dprintf("\n");
-    dprintf("--- Device Regions: %d ---\n", info->deviceUntyped.end - info->deviceUntyped.start);
-    dprintf("CSlot \t Device Addr \t Size\n");
-    int numDevices = info->deviceUntyped.end - info->deviceUntyped.start;
-    for (int i = 0; i < numDevices; i++) {
-        dprintf("%3x \t 0x%08x \t %d\n", info->deviceUntyped.start + i,
-                info->untypedPaddrList[numUntyped + i], info->untypedSizeBitsList[numUntyped + i]);
-    }
-
+    debug_print_bootinfo(info);
 }
 
 /*! @brief Initialises the kernel object allocator.
