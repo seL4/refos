@@ -23,6 +23,7 @@
     @brief Global statuc struct & helper functions for process server. */
 
 #define PROCSERV_IRQ_HANDLER_HASHTABLE_SIZE 32
+#define ALLOCATOR_VIRTUAL_POOL_SIZE ((1 << seL4_PageBits) * 100)
 #ifndef CONFIG_PROCSERV_INITIAL_MEM_SIZE
     #define CONFIG_PROCSERV_INITIAL_MEM_SIZE (4096 * 32)
 #endif
@@ -63,7 +64,7 @@ initialise_allocator(seL4_BootInfo *info, struct procserv_state *s)
     int error = -1;
     memset(s, 0, sizeof(struct procserv_state));
     (void) error;
-
+    reservation_t virtual_reservation;
     /* Create and initialise allocman allocator, and create a virtual kernel allocator (VKA)
        interface from it. */
     s->allocman = bootstrap_use_bootinfo(info, CONFIG_PROCSERV_INITIAL_MEM_SIZE,
@@ -77,12 +78,18 @@ initialise_allocator(seL4_BootInfo *info, struct procserv_state *s)
             seL4_CapInitThreadPD, &s->vka, info);
     assert(!error);
 
-    /* Initialise libsel4simple, which abstracts away which kernel version we are running on */
-    #ifdef CONFIG_KERNEL_STABLE
-        simple_stable_init_bootinfo(&s->simpleEnv, info);
-    #else
-        simple_default_init_bootinfo(&s->simpleEnv, info);
-    #endif
+    void *vaddr;
+    virtual_reservation = vspace_reserve_range(&s->vspace,
+                                               ALLOCATOR_VIRTUAL_POOL_SIZE, seL4_AllRights, 1, &vaddr);
+    
+    if (virtual_reservation.res == 0) {
+        ZF_LOGF("Failed to provide virtual memory for allocator");
+    }
+
+    bootstrap_configure_virtual_pool(s->allocman, vaddr,
+                                     ALLOCATOR_VIRTUAL_POOL_SIZE, seL4_CapInitThreadPD);
+
+    simple_default_init_bootinfo(&s->simpleEnv, info);
 }
 
 /*! @brief Initialise the process server modules.
