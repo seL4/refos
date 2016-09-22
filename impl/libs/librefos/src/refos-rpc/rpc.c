@@ -145,14 +145,14 @@ rpc_init(const char* name_str, int32_t label)
 
 	rpc_reset_contents(NULL);
 
-    seL4_SetMR(0, label);
-
     if (!_rpc_recv_cslot) {
         rpc_setup_recv(REFOS_THREAD_CAP_RECV);
     } else if (seL4_MessageInfo_get_extraCaps(_rpc_minfo) > 0) {
         // Flush recieving path of previous recieved caps.
         seL4_CNode_Delete(REFOS_CSPACE, _rpc_recv_cslot, REFOS_CDEPTH);
     }
+
+    seL4_SetMR(0, label);
 }
 
 void
