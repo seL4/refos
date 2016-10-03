@@ -130,8 +130,13 @@ terminal_evaluate_command(char *inputBuffer)
         for (int i = 0; __environ[i]; i++) {
             printf("%s\n", __environ[i]);
         }
-    } else if (!strcmp(args[0], "setenv") && args[1] && args[2]) {
-        setenv(args[1], args[2], true);
+    } else if (!strcmp(args[0], "setenv")) {
+        if (args[1] && args[2]) {
+            setenv(args[1], args[2], true);
+        }
+        else {
+            printf("setenv: usage: setenv <VARIABLE> <VALUE>\n");
+        }
     } else if (!strcmp(args[0], "cd") && args[1]) {
         setenv("PWD", args[1], true);
     } else {
