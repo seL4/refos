@@ -41,6 +41,7 @@ static void procserv_nameserv_callback_free_cap(seL4_CPtr cap);
 /*! @brief display a heartwarming welcome message.
     @param info The Bootinfo structure.
 */
+
 static void
 initialise_welcome_message(seL4_BootInfo *info)
 {
@@ -63,9 +64,11 @@ initialise_welcome_message(seL4_BootInfo *info)
     dprintf("Shared frames     0x%08x 0x%08x\n", info->sharedFrames.start, info->sharedFrames.end);
     dprintf("User image frames 0x%08x 0x%08x\n", info->userImageFrames.start,
             info->userImageFrames.end);
-    dprintf("User image PTs    0x%08x 0x%08x\n", info->userImagePTs.start, info->userImagePTs.end);
     dprintf("Untypeds          0x%08x 0x%08x\n", info->untyped.start, info->untyped.end);
+#ifndef CONFIG_KERNEL_MASTER
+    dprintf("User image PTs    0x%08x 0x%08x\n", info->userImagePTs.start, info->userImagePTs.end);
     dprintf("Device Regions    0x%08x 0x%08x\n", info->deviceUntyped.start, info->deviceUntyped.end);
+#endif
     
     dprintf("\n");
     dprintf("--- Untyped Details ---\n");
@@ -77,13 +80,32 @@ initialise_welcome_message(seL4_BootInfo *info)
     }
     
     dprintf("\n");
-    dprintf("--- Device Regions: %d ---\n", info->deviceUntyped.end - info->deviceUntyped.start);
-    dprintf("CSlot \t Device Addr \t Size\n");
+#ifdef CONFIG_KERNEL_MASTER
+    int numDevices = info->numDeviceRegions;
+#else
     int numDevices = info->deviceUntyped.end - info->deviceUntyped.start;
+#endif
+
+    dprintf("--- Device Regions: %d ---\n", numDevices);
+    dprintf("CSlot \t Device Addr \t Size\n");
     for (int i = 0; i < numDevices; i++) {
-        dprintf("%3x \t 0x%08x \t %d\n", info->deviceUntyped.start + i,
-                info->untypedPaddrList[numUntyped + i], info->untypedSizeBitsList[numUntyped + i]);
+	seL4_Word cslot;
+        uint32_t addr;
+	size_t sz;
+#ifdef CONFIG_KERNEL_MASTER
+	seL4_DeviceRegion dev_region = info->deviceRegions[i];
+
+	cslot = i;
+	addr = dev_region.basePaddr;
+	sz = dev_region.frameSizeBits;
+#else
+        cslot = info->deviceUntyped.start + i,
+	addr = info->untypedPaddrList[numUntyped + i];
+	sz = info->untypedSizeBitsList[numUntyped + i];
+#endif
+        dprintf("%3x \t\t 0x%08x \t %d\n", i, addr, sz);
     }
+
 
 }
 
