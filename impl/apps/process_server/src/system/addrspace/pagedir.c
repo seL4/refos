@@ -37,10 +37,10 @@ pd_init(struct pd_list *pdlist)
     /* Statically allocate the page directories. */
     for (int i = 0; i < PD_MAX; i++) {
 
-        /* Allocate the kernel PD object. */
-        int error = vka_alloc_page_directory(&procServ.vka, &pdlist->pd[i]);
+        /* Allocate the kernel vspace_root. */
+        int error = vka_alloc_vspace_root(&procServ.vka, &pdlist->pd[i]);
         if (error) {
-            ROS_ERROR("Failed to allocate page directory. error %d\n", error);
+            ROS_ERROR("Failed to allocate vspace root. error %d\n", error);
             assert(!"Procserv initialisation failed. Try lowering CONFIG_PROCSERV_MAX_VSPACES.");
             return;
         }

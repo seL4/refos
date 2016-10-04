@@ -33,7 +33,7 @@ vs_vspace_allocated_object_bookkeeping_callback(void *allocated_object_cookie, v
     struct vs_vspace *vs = (struct vs_vspace *) allocated_object_cookie;
     assert(vs && vs->magic == REFOS_VSPACE_MAGIC);
 
-    /* Create out own copy of this allocated object struct. */
+    /* Create our own copy of this allocated object struct. */
     vka_object_t *kobj = kmalloc(sizeof(vka_object_t));
     if (!kobj) {
         ROS_WARNING("Could not allocate new vka_object_t to book keep vspace allocated object.");
