@@ -26,7 +26,7 @@ NK_CFLAGS += -std=gnu99 -O2
 
 # Libraries required to build the target
 LIBS= muslc sel4 sel4muslcsys sel4allocman sel4platsupport sel4vka elf cpio refos sel4utils \
-      datastruct sel4simple utils platsupport sel4vspace
+      datastruct sel4simple sel4debug utils platsupport sel4vspace
 
 # Set up correct simple lib for our kernel
 ifdef CONFIG_KERNEL_STABLE

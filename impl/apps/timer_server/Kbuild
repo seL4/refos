@@ -10,4 +10,4 @@
 
 apps-$(CONFIG_APP_TIMER_SERVER)  += timer_server
 
-timer_server: common libmuslc libsel4 librefossys librefos libdatastruct libplatsupport
+timer_server: common libmuslc libsel4 librefossys librefos libdatastruct libutils libplatsupport
