@@ -17,8 +17,15 @@
    stack is in same vspace as the caller. If someone lifts that assumption at some point, this code
    should be fixed accordingly.
 */
+#ifdef CONFIG_KERNEL_MASTER
+int sel4utils_arch_init_context_with_args(void *entry_point, void *arg0, void *arg1, void *arg2,
+                                bool local_stack, void *stack_top, seL4_UserContext *context,
+                                vka_t *vka, vspace_t *local_vspace, vspace_t *remote_vspace);
+#else
 int sel4utils_internal_start_thread(sel4utils_thread_t *thread, void *entry_point, void *arg0,
         void *arg1, int resume, void *local_stack_top, void *dest_stack_top);
+#endif
+
 int
 thread_config(struct proc_tcb *thread, uint8_t priority, vaddr_t entryPoint,
                    struct vs_vspace *vspace)
@@ -57,16 +64,34 @@ thread_config(struct proc_tcb *thread, uint8_t priority, vaddr_t entryPoint,
 int
 thread_start(struct proc_tcb *thread, void *arg0, void *arg1)
 {
+    int error;
     assert(thread);
     assert(thread->entryPoint);
 
     /* Start the thread using seL4utils library. */
-    int error = sel4utils_internal_start_thread (
+#ifdef CONFIG_KERNEL_MASTER
+    seL4_UserContext userContext = {0};
+    error = sel4utils_arch_init_context_with_args(
+             (void *) thread->entryPoint,
+            arg0, arg1, NULL,
+            false, thread->sel4utilsThread.stack_top,
+           &userContext, &procServ.vka, &thread->vspaceRef->vspace, NULL
+    );
+
+   seL4_TCB_WriteRegisters(
+	thread->sel4utilsThread.tcb.cptr, 1, 0,
+	sizeof(seL4_UserContext) / sizeof(seL4_Word),
+	&userContext
+   );
+#else
+    error = sel4utils_internal_start_thread (
             &thread->sel4utilsThread,
             (void *) thread->entryPoint,
             arg0, arg1,
             true, NULL, thread->sel4utilsThread.stack_top
     );
+#endif
+
     if (error) {
         ROS_ERROR("sel4utils_start_thread failed. error: %d.", error);
         return EINVALID;
