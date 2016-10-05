@@ -65,45 +65,26 @@ initialise_welcome_message(seL4_BootInfo *info)
     dprintf("User image frames 0x%08x 0x%08x\n", info->userImageFrames.start,
             info->userImageFrames.end);
     dprintf("Untypeds          0x%08x 0x%08x\n", info->untyped.start, info->untyped.end);
-#ifndef CONFIG_KERNEL_MASTER
-    dprintf("User image PTs    0x%08x 0x%08x\n", info->userImagePTs.start, info->userImagePTs.end);
-    dprintf("Device Regions    0x%08x 0x%08x\n", info->deviceUntyped.start, info->deviceUntyped.end);
-#endif
     
     dprintf("\n");
     dprintf("--- Untyped Details ---\n");
     dprintf("Untyped Slot       Paddr      Bits\n");
     int numUntyped = info->untyped.end - info->untyped.start;
+    int numDevices = 0;
     for (int i = 0; i < numUntyped; i++) {
-        dprintf("%3x     0x%08x 0x%08x %d\n", i, info->untyped.start+i, info->untypedPaddrList[i],
-                info->untypedSizeBitsList[i]);
+        if (!info->untypedList[i].isDevice) {
+          dprintf("%3x     0x%08x 0x%08x %d\n", i, info->untyped.start+i, info->untypedList[i].paddr,
+                  info->untypedList[i].sizeBits);
+        } else numDevices++;
     }
     
     dprintf("\n");
-#ifdef CONFIG_KERNEL_MASTER
-    int numDevices = info->numDeviceRegions;
-#else
-    int numDevices = info->deviceUntyped.end - info->deviceUntyped.start;
-#endif
-
     dprintf("--- Device Regions: %d ---\n", numDevices);
     dprintf("CSlot \t Device Addr \t Size\n");
-    for (int i = 0; i < numDevices; i++) {
-	seL4_Word cslot;
-        uint32_t addr;
-	size_t sz;
-#ifdef CONFIG_KERNEL_MASTER
-	seL4_DeviceRegion dev_region = info->deviceRegions[i];
-
-	cslot = i;
-	addr = dev_region.basePaddr;
-	sz = dev_region.frameSizeBits;
-#else
-        cslot = info->deviceUntyped.start + i,
-	addr = info->untypedPaddrList[numUntyped + i];
-	sz = info->untypedSizeBitsList[numUntyped + i];
-#endif
-        dprintf("%3x \t\t 0x%08x \t %d\n", i, addr, sz);
+    for (int i = 0; i < numUntyped; i++) {
+        if (info->untypedList[i].isDevice) {
+          dprintf("%3x \t\t 0x%08x \t %d\n", i, info->untypedList[i].paddr, info->untypedList[i].sizeBits);
+        }
     }
 
 
