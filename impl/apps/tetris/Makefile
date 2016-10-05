@@ -17,10 +17,10 @@ TARGETS := tetris.bin
 CFILES   := $(patsubst $(SOURCE_DIR)/%,%,$(wildcard $(SOURCE_DIR)/src/*.c))
 ASMFILES := $(patsubst $(SOURCE_DIR)/%,%,$(wildcard $(SOURCE_DIR)/crt/arch-${ARCH}/crt0.S))
 
-NK_CFLAGS += -D_BSD_SOURCE -O2 -Wall -Werror
+NK_CFLAGS += -D_BSD_SOURCE -O2
 
 # Libraries required to build the target
-LIBS := muslc sel4 refossys refos datastruct
+LIBS := c sel4 refossys refos datastruct
 
 # Custom linker script
 NK_LDFLAGS += -T $(SOURCE_DIR)/linker.lds

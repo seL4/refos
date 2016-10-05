@@ -22,7 +22,7 @@ OFILES := archive.o
 NK_CFLAGS += -O2
 
 # Libraries required to build the target
-LIBS := muslc sel4 elf refossys refos cpio datastruct
+LIBS := c sel4 elf refossys refos cpio datastruct
 
 # Custom linker script
 NK_LDFLAGS += -T $(SOURCE_DIR)/linker.lds

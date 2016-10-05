@@ -30,7 +30,7 @@ NK_CFLAGS += -DTTY_GRAPHICS -DANSI_DEFAULT -DDLB -DNO_FILE_LINKS- -DDLBLIB
 NK_CFLAGS += -w
 
 # Libraries required to build the target
-LIBS := muslc sel4 refossys refos datastruct
+LIBS := c sel4 refossys refos datastruct
 
 # Custom linker script
 NK_LDFLAGS += -T $(SOURCE_DIR)/linker.lds
