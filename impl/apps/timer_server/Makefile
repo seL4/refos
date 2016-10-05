@@ -20,7 +20,7 @@ ASMFILES := $(patsubst $(SOURCE_DIR)/%,%,$(wildcard $(SOURCE_DIR)/crt/arch-${ARC
 NK_CFLAGS += -O2
 
 # Libraries required to build the target
-LIBS := muslc sel4 refossys refos datastruct platsupport
+LIBS := muslc sel4 refossys refos datastruct utils platsupport
 
 # Custom linker script
 NK_LDFLAGS += -T $(SOURCE_DIR)/linker.lds

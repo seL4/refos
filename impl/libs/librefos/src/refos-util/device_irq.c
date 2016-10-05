@@ -88,7 +88,7 @@ int dev_handle_irq(dev_irq_state_t *irqState, uint32_t irq,
     }
 
     /* Assign AEP to the IRQ handler. */
-    int error = seL4_IRQHandler_SetEndpoint(irqState->handler[irq].handler, irqBadge);
+    int error = seL4_IRQHandler_SetNotification(irqState->handler[irq].handler, irqBadge);
     if (error) {
         ROS_WARNING("dev_handle_irq : could not set notify aep for irq %u.\n", irq);
         csfree_delete(irqBadge);

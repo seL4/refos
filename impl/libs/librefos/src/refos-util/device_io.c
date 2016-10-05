@@ -122,9 +122,9 @@ dev_io_port_in(void* cookie, uint32_t port, int io_size, uint32_t *result)
 
 #if defined(PLAT_PC99)
     if (io->IOPorts) {
-        seL4_IA32_IOPort_In8_t res8;
-        seL4_IA32_IOPort_In16_t res16;
-        seL4_IA32_IOPort_In32_t res32;
+        seL4_X86_IOPort_In8_t res8;
+        seL4_X86_IOPort_In16_t res16;
+        seL4_X86_IOPort_In32_t res32;
 
         res8.error = -1;
         res16.error = -1;
@@ -132,19 +132,19 @@ dev_io_port_in(void* cookie, uint32_t port, int io_size, uint32_t *result)
 
         switch (io_size) {
             case 1: /* 8 bits. */
-                res8 = seL4_IA32_IOPort_In8(io->IOPorts, port);
+                res8 = seL4_X86_IOPort_In8(io->IOPorts, port);
                 if (!res8.error && result != NULL) {
                     (*result) = (uint32_t) res8.result;
                 }
                 return res8.error;
             case 2: /* 16 bits. */
-                res16 = seL4_IA32_IOPort_In16(io->IOPorts, port);
+                res16 = seL4_X86_IOPort_In16(io->IOPorts, port);
                 if (!res16.error && result != NULL) {
                     (*result) = (uint32_t) res16.result;
                 }
                 return res16.error;
             case 4: /* 32 bits. */
-                res32 = seL4_IA32_IOPort_In32(io->IOPorts, port);
+                res32 = seL4_X86_IOPort_In32(io->IOPorts, port);
                 if (!res32.error && result != NULL) {
                     (*result) = (uint32_t) res32.result;
                 }
@@ -167,13 +167,13 @@ dev_io_port_out(void* cookie, uint32_t port, int io_size, uint32_t val)
     if (io->IOPorts) {
         switch (io_size) {
             case 1: /* 8 bits. */
-                seL4_IA32_IOPort_Out8(io->IOPorts, port, (uint8_t) val);
+                seL4_X86_IOPort_Out8(io->IOPorts, port, (uint8_t) val);
                 return 0;
             case 2: /* 16 bits. */
-                seL4_IA32_IOPort_Out16(io->IOPorts, port, (uint16_t) val);
+                seL4_X86_IOPort_Out16(io->IOPorts, port, (uint16_t) val);
                 return 0;
             case 4: /* 32 bits. */
-                seL4_IA32_IOPort_Out32(io->IOPorts, port, (uint32_t) val);
+                seL4_X86_IOPort_Out32(io->IOPorts, port, (uint32_t) val);
                 return 0;
         }
     }

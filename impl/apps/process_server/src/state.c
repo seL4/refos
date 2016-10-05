@@ -41,6 +41,7 @@ static void procserv_nameserv_callback_free_cap(seL4_CPtr cap);
 /*! @brief display a heartwarming welcome message.
     @param info The Bootinfo structure.
 */
+
 static void
 initialise_welcome_message(seL4_BootInfo *info)
 {
@@ -63,27 +64,29 @@ initialise_welcome_message(seL4_BootInfo *info)
     dprintf("Shared frames     0x%08x 0x%08x\n", info->sharedFrames.start, info->sharedFrames.end);
     dprintf("User image frames 0x%08x 0x%08x\n", info->userImageFrames.start,
             info->userImageFrames.end);
-    dprintf("User image PTs    0x%08x 0x%08x\n", info->userImagePTs.start, info->userImagePTs.end);
     dprintf("Untypeds          0x%08x 0x%08x\n", info->untyped.start, info->untyped.end);
-    dprintf("Device Regions    0x%08x 0x%08x\n", info->deviceUntyped.start, info->deviceUntyped.end);
     
     dprintf("\n");
     dprintf("--- Untyped Details ---\n");
     dprintf("Untyped Slot       Paddr      Bits\n");
     int numUntyped = info->untyped.end - info->untyped.start;
+    int numDevices = 0;
     for (int i = 0; i < numUntyped; i++) {
-        dprintf("%3x     0x%08x 0x%08x %d\n", i, info->untyped.start+i, info->untypedPaddrList[i],
-                info->untypedSizeBitsList[i]);
+        if (!info->untypedList[i].isDevice) {
+          dprintf("%3x     0x%08x 0x%08x %d\n", i, info->untyped.start+i, info->untypedList[i].paddr,
+                  info->untypedList[i].sizeBits);
+        } else numDevices++;
     }
     
     dprintf("\n");
-    dprintf("--- Device Regions: %d ---\n", info->deviceUntyped.end - info->deviceUntyped.start);
+    dprintf("--- Device Regions: %d ---\n", numDevices);
     dprintf("CSlot \t Device Addr \t Size\n");
-    int numDevices = info->deviceUntyped.end - info->deviceUntyped.start;
-    for (int i = 0; i < numDevices; i++) {
-        dprintf("%3x \t 0x%08x \t %d\n", info->deviceUntyped.start + i,
-                info->untypedPaddrList[numUntyped + i], info->untypedSizeBitsList[numUntyped + i]);
+    for (int i = 0; i < numUntyped; i++) {
+        if (info->untypedList[i].isDevice) {
+          dprintf("%3x \t\t 0x%08x \t %d\n", i, info->untypedList[i].paddr, info->untypedList[i].sizeBits);
+        }
     }
+
 
 }
 
