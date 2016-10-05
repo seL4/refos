@@ -173,7 +173,7 @@ test_proc_client_watch(void)
     /* Create dummy async EPs to test with. */
     for (int i = 0; i < 4; i++) {
         /* Create endpoint. */
-        int error = vka_alloc_async_endpoint(&procServ.vka, &dummyEP[i]);
+        int error = vka_alloc_notification(&procServ.vka, &dummyEP[i]);
         test_assert(!error);
         test_assert(dummyEP[i].cptr != 0);
 

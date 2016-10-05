@@ -58,7 +58,7 @@ proc_syscall_allocate_endpoint(struct proc_pcb *pcb, kobject_t type)
     if (type == KOBJECT_ENDPOINT) {
         error = vka_alloc_endpoint(&procServ.vka, &endpoint);
     } else if (type == KOBJECT_NOTIFICATION) {
-        error = vka_alloc_async_endpoint(&procServ.vka, &endpoint);
+        error = vka_alloc_notification(&procServ.vka, &endpoint);
     } else {
         assert(!"Invalid endpoint type.");
     }
