@@ -12,12 +12,12 @@
 
 /*! @file
     @brief CPIO File Server main source file.
-    
+
     The main role of the fileserver in the system is to provide the executable file contents via
     the dataspace interface. It does some book-keeping and simple management of clients.
 
     @image html fileserv.png
-    
+
     The CPIO file server:
     <ul>
         <li>Supports providing pager service to clients.</li>
@@ -60,6 +60,9 @@
 
 #define MMAP_SIZE 0x200000 /*!< 32MB.. */
 static char mmapRegion[MMAP_SIZE];
+
+/*! @brief File server's system call table. */
+extern uintptr_t __vsyscall_ptr;
 
 /*! @brief Fake time generator used by dprintf(). */
 uint32_t faketime() {
@@ -111,7 +114,7 @@ fileserv_mainloop(void)
 {
     struct fs_state *s = &fileServ;
     srv_msg_t msg;
-    
+
     while (1) {
         dvprintf("Fileserver blocking for message...\n");
         msg.message = seL4_Recv(fileServCommon->anonEP, &msg.badge);
@@ -122,7 +125,28 @@ fileserv_mainloop(void)
 
 /*! @brief Main CPIO file server entry point. */
 int
-main() {
+main()
+{
+    /* Future Work 4:
+       Eventually RefOS should be changed so that processes that are started
+       by the process server do not require that the their system call table be
+       explicitly referenced in the code like this. Without expliciting referencing
+       __vsyscall_ptr in main(), the compiler optimizes away __vsyscall_ptr
+       and then processes started by the process server can't find their system call
+       table. Each of the four places in RefOS where this explicit reference is
+       required is affected by a custom linker script (linker.lds), so it is possible
+       that the custom linker script (and then likely other things too) needs to be
+       modified. Also note that the ROS_ERROR() and assert() inside this if statement
+       would not actually be able to execute if __vsyscall_ptr() were ever not set.
+       The purpose of these calls to ROS_ERROR() and assert() is to show future
+       developers that __vsyscall_ptr needs to be defined.
+    */
+    if (! __vsyscall_ptr) {
+        ROS_ERROR("File server could not find system call table.");
+        assert("!File server could not find system call table.");
+        return 0;
+    }
+
     refosio_setup_morecore_override(mmapRegion, MMAP_SIZE);
     refos_initialise_os_minimal();
     refos_setup_dataspace_stdio(REFOS_DEFAULT_STDIO_DSPACE);

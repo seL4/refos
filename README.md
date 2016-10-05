@@ -63,6 +63,7 @@ Suggested Future Work
 The following is suggested future work that interested open-source developers could implement:
 
  * Future Work 1: modify how the process server creates and starts processes and threads (see 'Future Work 1' in code)
+ * Future Work 4: remove explicit reference to system call table in processes that the process server creates (see 'Future Work 4' in code)
 
 License
 -------

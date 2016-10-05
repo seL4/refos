@@ -46,6 +46,8 @@
 #define MMAP_SIZE 0x100000 // 16MB.
 static char mmapRegion[MMAP_SIZE];
 
+extern uintptr_t __vsyscall_ptr;
+
 #define BSS_MAGIC 0xBA13DD37
 #define BSS_ARRAY_SIZE 0x20000
 #define TEST_KERNEL_VM_RESERVED_START 0xE0000000
@@ -136,13 +138,13 @@ static int
 test_process_server_endpoints(void)
 {
     test_start("process server endpoints");
-    
+
     seL4_CPtr ep = proc_new_endpoint();
     test_assert(ep && ROS_ERRNO() == ESUCCESS);
-    
+
     seL4_CPtr aep = proc_new_async_endpoint();
     test_assert(aep && ROS_ERRNO() == ESUCCESS);
-    
+
     seL4_MessageInfo_t tag = seL4_MessageInfo_new(0, 0, 0, 1);
     seL4_SetMR(0, 0x31336);
     seL4_NBSend(aep, tag);
@@ -164,7 +166,7 @@ test_process_server_window(void)
 {
     test_start("process server memwindows");
     seL4_Word testBase = 0x20000000;
-    
+
     /* Create invalid window in kernel memory. */
     seL4_CPtr invalidKernelMemWindow = proc_create_mem_window(
             TEST_KERNEL_VM_RESERVED_START + 100, 0x1000);
@@ -216,7 +218,7 @@ test_process_server_window_resize(void)
 
     seL4_CPtr testCheckWindow = proc_create_mem_window(testBase + 0x3000, 0x1000);
     test_assert(testCheckWindow && ROS_ERRNO() == ESUCCESS);
- 
+
     /* Resizing the latter window should succeed. */
     int error = proc_resize_mem_window(testCheckWindow, 0x2000);
     test_assert(error == ESUCCESS);
@@ -270,21 +272,21 @@ test_process_server_nameserv(void)
     nsv_mountpoint_t mp;
     char *testServerName = "os_test_dummy_server";
     char *testServerPath = "/os_test_dummy_server/foo.txt";
-    
+
     /* Should not find this server. */
     mp = nsv_resolve(testServerPath);
     test_assert(ROS_ERRNO() == ESERVERNOTFOUND);
     test_assert(mp.success == false);
     test_assert(mp.serverAnon == 0);
-    
+
     /* Make a quick anon cap. */
     seL4_CPtr aep = proc_new_async_endpoint();
     test_assert(aep && ROS_ERRNO() == ESUCCESS);
-    
+
     /* We register ourselves now under this server name. */
     error = nsv_register(REFOS_NAMESERV_EP, testServerName, aep);
     test_assert(error == ESUCCESS);
-    
+
     /* We should find ourself now. */
     mp = nsv_resolve(testServerPath);
     test_assert(ROS_ERRNO() == ESUCCESS);
@@ -311,7 +313,7 @@ test_process_server_nameserv(void)
     /* We now unregister ourselves. */
     error = nsv_unregister(REFOS_NAMESERV_EP, testServerName);
     test_assert(error == ESUCCESS);
-    
+
     /* We should not be able to find this server again. */
     mp = nsv_resolve(testServerPath);
     test_assert(ROS_ERRNO() == ESERVERNOTFOUND);
@@ -479,6 +481,26 @@ int
 main()
 {
 #ifdef CONFIG_REFOS_RUN_TESTS
+    /* Future Work 4:
+       Eventually RefOS should be changed so that processes that are started
+       by the process server do not require that the their system call table be
+       explicitly referenced in the code like this. Without expliciting referencing
+       __vsyscall_ptr in main(), the compiler optimizes away __vsyscall_ptr
+       and then processes started by the process server can't find their system call
+       table. Each of the four places in RefOS where this explicit reference is
+       required is affected by a custom linker script (linker.lds), so it is possible
+       that the custom linker script (and then likely other things too) needs to be
+       modified. Also note that the ROS_ERROR() and assert() inside this if statement
+       would not actually be able to execute if __vsyscall_ptr() were ever not set.
+       The purpose of these calls to ROS_ERROR() and assert() is to show future
+       developers that __vsyscall_ptr needs to be defined.
+    */
+    if (! __vsyscall_ptr) {
+        ROS_ERROR("Test OS server could not find system call table.");
+        assert("!Test OS server could not find system call table.");
+        return 0;
+    }
+
     refosio_setup_morecore_override(mmapRegion, MMAP_SIZE);
     refos_initialise_os_minimal();
     refos_setup_dataspace_stdio(REFOS_DEFAULT_STDIO_DSPACE);
@@ -487,15 +509,12 @@ main()
     test_title = "OS_TESTS";
     test_OS_level();
     test_print_log();
-    
+
     test_start_userland_test();
     tprintf("OS_TESTS | Back to Refos OS-level. Running userland second time.\n");
     test_start_userland_test();
     tprintf("OS_TESTS | Back to Refos OS-level. Quitting.\n");
 #endif /* CONFIG_REFOS_RUN_TESTS */
-    
+
     return 0;
 }
-
-
-

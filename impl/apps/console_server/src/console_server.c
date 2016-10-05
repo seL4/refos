@@ -56,6 +56,9 @@
 /*! @brief Console server's static morecore region. */
 static char conServMMapRegion[CONSERV_MMAP_REGION_SIZE];
 
+/*! @brief Console server's system call table. */
+extern uintptr_t __vsyscall_ptr;
+
 /*! @brief Handle messages recieved by the Console server.
     @param s The global Console server state. (No ownership transfer)
     @param msg The recieved message. (No ownership transfer)
@@ -124,6 +127,26 @@ uint32_t faketime() {
 int
 main(void)
 {
+    /* Future Work 4:
+       Eventually RefOS should be changed so that processes that are started
+       by the process server do not require that the their system call table be
+       explicitly referenced in the code like this. Without expliciting referencing
+       __vsyscall_ptr in main(), the compiler optimizes away __vsyscall_ptr
+       and then processes started by the process server can't find their system call
+       table. Each of the four places in RefOS where this explicit reference is
+       required is affected by a custom linker script (linker.lds), so it is possible
+       that the custom linker script (and then likely other things too) needs to be
+       modified. Also note that the ROS_ERROR() and assert() inside this if statement
+       would not actually be able to execute if __vsyscall_ptr() were ever not set.
+       The purpose of these calls to ROS_ERROR() and assert() is to show future
+       developers that __vsyscall_ptr needs to be defined.
+    */
+    if (! __vsyscall_ptr) {
+        ROS_ERROR("Console server could not find system call table.");
+        assert("!Console server could not find system call table.");
+        return 0;
+    }
+
     dprintf("Initialising RefOS Console server.\n");
     refosio_setup_morecore_override(conServMMapRegion, CONSERV_MMAP_REGION_SIZE);
     refos_initialise_os_minimal();
