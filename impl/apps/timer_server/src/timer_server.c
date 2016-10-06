@@ -132,7 +132,7 @@ main()
     refos_init_selfload_child(address);
     dprintf("Initialising RefOS timer server.\n");
     refosio_setup_morecore_override(timeServMMapRegion, TIMESERV_MMAP_REGION_SIZE);
-    refos_initialise();
+    refos_initialise_timer();
     timeserv_init();
 
     timer_server_mainloop();

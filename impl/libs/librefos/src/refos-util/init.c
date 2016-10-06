@@ -749,6 +749,41 @@ void refos_initialise_selfloader(void)
 }
 
 void
+refos_initialise_timer(void)
+{
+    /* Temporarily use seL4_DebugPutChar before printf is set up. On release kernel this will
+       do nothing. */
+    refos_seL4_debug_override_stdout();
+
+    /* We first initialise the cspace allocator statically, as MMap and heap (which malloc 
+       depend on) needs this. */
+    csalloc_init_static(PROCCSPACE_ALLOC_REGION_START, PROCCSPACE_ALLOC_REGION_END,
+            _refosUtilCSpaceStatic, REFOS_UTIL_CSPACE_STATIC_SIZE);
+
+    /* Initialise dynamic MMap and heap. */
+    refosio_init_morecore(refos_static_param_procinfo());
+
+    /* Initialise userspace allocator helper libraries. */
+    walloc_init(PROCESS_WALLOC_START, PROCESS_WALLOC_END);
+
+    /* Write to the STDIO output device. */
+    refos_override_stdio(NULL, NULL);
+    refos_setup_dataspace_stdio(REFOS_DEFAULT_STDIO_DSPACE);
+
+    /* Initialise file descriptor table. */
+    filetable_init_default();
+
+    /* Initialise default environment variables. */
+    _refosEnv[0] = NULL;
+    __environ = _refosEnv;
+    setenv("SHELL", "/fileserv/terminal", true);
+    setenv("PWD", "/", true);
+    #ifdef CONFIG_REFOS_TIMEZONE
+        setenv("TZ", CONFIG_REFOS_TIMEZONE, true);
+    #endif
+}
+
+void
 refos_initialise(void)
 {
     /* Temporarily use seL4_DebugPutChar before printf is set up. On release kernel this will

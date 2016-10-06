@@ -64,6 +64,10 @@ void refos_initialise_os_minimal(void);
 /*! @brief Initialise a tiny environment, just for the selfloader. */
 void refos_initialise_selfloader(void);
 
+/*! @brief Initialise a full RefOS userland environment for the timer server. Requires all the system
+           infrastructure to be set up. */
+void refos_initialise_timer(void);
+
 /*! @brief Initialise a full RefOS userland environment. Requires all the system infrastructure to
            be set up. */
 void refos_initialise(void);
