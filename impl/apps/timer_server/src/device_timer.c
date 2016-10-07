@@ -112,7 +112,7 @@ device_timer_update_sleepers(struct device_timer_state *s)
         /* Reply to the waiter. */
         waiter->client->rpcClient.skip_reply = false;
         waiter->client->rpcClient.reply = waiter->reply;
-        reply_data_write((void*) waiter->client, sizeof(uint32_t));
+        reply_data_write((void*) waiter->client, sizeof(uint64_t));
 
         /* Delete the saved reply cap, and free the structure. */
         waiter->client->rpcClient.reply = 0;
