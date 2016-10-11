@@ -188,7 +188,6 @@ device_timer_init_rtc(struct device_timer_state *s, dev_io_ops_t *io)
     timeInfo.tm_year = rtcTimeDate.year - 1900;
 
     time_t epochSeconds = mktime(&timeInfo);
-    dprintf("Time since epoch is %ld. RTC %s", epochSeconds, ctime(&epochSeconds));
     s->cumulativeTime = (uint64_t) epochSeconds * 1000000000ULL;
 
     #endif

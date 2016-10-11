@@ -23,6 +23,8 @@
 #include <unistd.h>
 #include <autoconf.h>
 
+#include "print_time.h"
+
 /*! @file
     @brief A simple terminal program for RefOS.
 
@@ -124,8 +126,8 @@ terminal_evaluate_command(char *inputBuffer)
         struct tm *gmtTime = gmtime(&rawTime);
         struct tm *localTime = localtime(&rawTime);
         printf("Raw epoch time is %llu\n", (uint64_t) rawTime);
-        printf("Current GMT time is %s", asctime(gmtTime));
-        printf("Current local time (%s) is %s", getenv("TZ"), asctime(localTime));
+        printf("Current GMT time is %s", refos_print_time(gmtTime));
+        printf("Current local time (%s) is %s", getenv("TZ"), refos_print_time(localTime));
     } else if (!strcmp(args[0], "printenv")) {
         for (int i = 0; __environ[i]; i++) {
             printf("%s\n", __environ[i]);
