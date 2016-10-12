@@ -14,6 +14,7 @@
 #include "common.h"
 #include <simple/simple.h>
 #include <sel4platsupport/platsupport.h>
+#include <sel4platsupport/plat/serial.h>
 #include <sel4debug/debug.h>
 #include <autoconf.h>
 #include <refos/refos.h>
@@ -28,6 +29,7 @@
     #define CONFIG_PROCSERV_INITIAL_MEM_SIZE (4096 * 32)
 #endif
 
+void *serial_paddr;
 static char _procservInitialMemPool[CONFIG_PROCSERV_INITIAL_MEM_SIZE];
 struct procserv_state procServ;
 const char* dprintfServerName = "PROCSERV";
@@ -105,6 +107,50 @@ initialise_modules(struct procserv_state *s)
     nameserv_init(&s->nameServRegList, procserv_nameserv_callback_free_cap);
 }
 
+#ifdef CONFIG_ARCH_ARM
+/*! @brief Wrapper function for allocating a portion of an untyped into an object.
+    @param data cookie for the underlying allocator.
+    @param dest path to an empty cslot to place the cap to the allocated object.
+    @param type the seL4 object type to allocate (as passed to Untyped_Retype).
+    @param size_bits the size of the object to allocate (as passed to Untyped_Retype).
+    @param paddr The desired physical address that this object should start at.
+    @param cookie pointer to a location to store the cookie representing this allocation.
+    @return 0 on success.
+*/
+static int
+serial_utspace_alloc_at_fn(void *data, const cspacepath_t *dest, seL4_Word type,
+                           seL4_Word size_bits, uintptr_t paddr, seL4_Word *cookie)
+{
+    /* since DEFAULT_SERIAL_PADDR memory has already been allocated, we do not
+       allocate it again */
+    if ((uintptr_t) serial_paddr == paddr) {
+        return vka_cnode_copy(dest, &procServ.serial_frame_cap_path, seL4_AllRights);
+    }
+
+    assert(procServ.vka.utspace_alloc_at);
+    return procServ.vka.utspace_alloc_at(data, dest, type, size_bits, paddr, cookie);
+}
+
+/*! @brief Wrapper function for getting the cap to the physical frame of
+           memory and putting it at specified location.
+    @param data cookie for the underlying implementation.
+    @param paddr aligned physical address.
+    @param size_bits of the region in bits.
+    @param path The path to where to put this cap.
+*/
+seL4_Error
+serial_get_frame_cap(void *data, void *paddr, int size_bits, cspacepath_t *path)
+{
+    /* since DEFAULT_SERIAL_PADDR has already been initialised, we do not
+       initialise it again */
+    if ((void *) serial_paddr == paddr) {
+        return vka_cnode_copy(path, &procServ.serial_frame_cap_path, seL4_AllRights);
+    }
+
+    return procServ.original_simple_get_frame_cap(data, paddr, size_bits, path);
+}
+#endif /* CONFIG_ARCH_ARM */
+
 /*! @brief Initialise the process server.
     @param info The BootInfo struct passed in from the kernel.
     @param s The process server global state to initialise.
@@ -116,8 +162,25 @@ initialise(seL4_BootInfo *info, struct procserv_state *s)
     int error;
     (void) error;
 
+    vka_t serial_vka = s->vka;
+
+#ifdef CONFIG_ARCH_ARM
+    /* create wrapper functions for initialising DEFAULT_SERIAL_PADDR
+       since it has already been set up */
+    vka_object_t result;
+    serial_paddr = (void *) DEFAULT_SERIAL_PADDR;
+    error = vka_alloc_frame_at(&s->vka, PAGE_BITS_4K, DEFAULT_SERIAL_PADDR, &result);
+    vka_cspace_make_path(&s->vka, result.cptr, &s->serial_frame_cap_path);
+
+    serial_vka.utspace_alloc_at = serial_utspace_alloc_at_fn;
+
+    s->original_simple_get_frame_cap = s->simpleEnv.frame_cap;
+
+    s->simpleEnv.frame_cap = serial_get_frame_cap;
+#endif /* CONFIG_ARCH_ARM */
+
     /* Enable printf and then print welcome message. */
-    platsupport_serial_setup_simple(&s->vspace, &s->simpleEnv, &s->vka);
+    platsupport_serial_setup_simple(&s->vspace, &s->simpleEnv, &serial_vka);
     initialise_welcome_message(info);
 
     /* Set up process server global objects. */
@@ -138,7 +201,7 @@ initialise(seL4_BootInfo *info, struct procserv_state *s)
     s->unblockClientFaultPID = PID_NULL;
 
     /* Procserv initialised OK. */
-    dprintf("OK.\n");
+    dprintf("PROCSERV initialised.\n");
     dprintf("==========================================\n\n");
 }
 

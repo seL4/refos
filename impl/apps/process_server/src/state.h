@@ -51,9 +51,15 @@ struct procserv_state {
     vka_t                             *vkaPtr;
     vspace_t                           vspace;
     sel4utils_alloc_data_t             vspaceData;
-    allocman_t                         *allocman;
+    allocman_t                        *allocman;
     simple_t                           simpleEnv;
+#ifdef CONFIG_ARCH_ARM
+    /* Copy of simpleEnv.frame_cap function (required for function wrapper). */
+    simple_get_frame_cap_fn            original_simple_get_frame_cap;
 
+    /* Cspace path to the serial frame cap. */
+    cspacepath_t                       serial_frame_cap_path;
+#endif /* CONFIG_ARCH_ARM */
     /* Process server endpoints. */
     vka_object_t                       endpoint;
     cspacepath_t                       IPCCapRecv;
