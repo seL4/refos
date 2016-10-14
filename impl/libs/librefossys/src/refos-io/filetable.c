@@ -206,7 +206,9 @@ filetable_close(fd_table_t *fdt, int fd)
 refos_err_t
 filetable_lseek(fd_table_t *fdt, int fd, int *offset, int whence)
 {
-    assert(fdt && fdt->magic == FD_TABLE_MAGIC);
+    /* because muslc can now call seek when closing a file,
+       fdt->magic may now be 0 here as well as FD_TABLE_MAGIC */
+    assert(fdt && (fdt->magic == FD_TABLE_MAGIC || fdt->magic == 0));
     if (!offset) {
         printf("filetable_lseek - NULL parameter.\n");
         return EINVALIDPARAM;

@@ -312,15 +312,22 @@ sys__llseek(va_list ap)
     unsigned long offset_low = va_arg(ap, unsigned long);
     off_t *result = va_arg(ap, off_t*);
     int whence = va_arg(ap, int);
+    off_t seek_distance;
 
     if (!result) {
         return -1;
     }
-    if (offset_high != 0) {
+
+    int64_t seek_distance64 = (int64_t)(((uint64_t)offset_high << 32) | (uint64_t)offset_low);
+    if (seek_distance64 > (int64_t)INT_MAX || seek_distance64 < (int64_t)INT_MIN) {
+        /* This number cannot be represented by signed 32-bit integers, so return error.
+           If this ever presents a problem, consider extending this to use 64-bit integers. */
         return -1;
     }
 
-    (*result) = (off_t) _sys_lseek(fildes, offset_low, whence);
+    seek_distance = (off_t)seek_distance64;
+
+    (*result) = (off_t) _sys_lseek(fildes, seek_distance, whence);
     return 0;
 }
 
