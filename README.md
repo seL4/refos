@@ -66,6 +66,7 @@ The following is suggested future work that interested open-source developers co
  * Future Work 2: fix issue where calls to assert_fail() result in infinite recursion on x86 architecture (see 'Future Work 2' in code)
  * Future Work 3: modify how the selfloader bootstraps user processes (see 'Future Work 3' in code)
  * Future Work 4: remove explicit reference to system call table in processes that the process server creates (see 'Future Work 4' in code)
+ * Future Work 5: set up muslc's errno in RefOS (see 'Future Work 5' in code)
 
 License
 -------
