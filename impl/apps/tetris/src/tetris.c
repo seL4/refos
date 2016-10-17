@@ -22,17 +22,17 @@
 
 /*! @file
     @brief RefOS port of Micro Tetris.
-    
+
     <h1> RefOS Tetris </h1>
-    
+
     A classic Tetris clone, heavily based on (a port of)
     Micro Tetris by Joachim Nilsson <joachim.nilsson@vmlinux.org>,
     which itself is based on the 1989 IOCCC Best Game entry "An obfuscated
     tetris" by John Tromp <john.tromp@gmail.com>.
-    
+
     Website about original IOCCC entry:
     http://homepages.cwi.nl/~tromp/tetris.html
-    
+
     Website about Micro Tetris:
     http://freecode.com/projects/micro-tetris 
     http://troglobit.com/tetris.html
@@ -169,18 +169,18 @@ int
 update(void)
 {
     int x, y; 
-    
+
     /* Render the next piece preview. */
     if (enablePreview) {
         static int start = 5;
         memset (preview, 0, sizeof(preview));
-        
+
         int c = get_col(peekShape);
         preview[2 * B_COLS + 1] = c;
         preview[2 * B_COLS + 1 + peekShape[1]] = c;
         preview[2 * B_COLS + 1 + peekShape[2]] = c;
         preview[2 * B_COLS + 1 + peekShape[3]] = c;
-    
+
         for (y = 0; y < 4; y++) {
             for (x = 0; x < B_COLS; x++) {
                 if (preview[y * B_COLS + x] - shadowPreview[y * B_COLS + x]) {
@@ -191,7 +191,7 @@ update(void)
             }
         }
     }
-    
+
     /* Render the actual board. */
     for (y = 1; y < B_ROWS - 1; y++) {
         for (x = 0; x < B_COLS; x++) {
@@ -202,14 +202,14 @@ update(void)
             }
         }
     }
-    
+
     /* Update points and level. */
     while (linesCleared >= LINES_PER_LEVEL) {
         linesCleared -= LINES_PER_LEVEL;
         level++;
         if (level > MAX_LEVEL) level = MAX_LEVEL;
     }
-    
+
     /* Render the scoreboard. */
     if (enableScoreBoard) {
         textattr(RESETATTR);
@@ -220,13 +220,13 @@ update(void)
         printf ("Points : %d", points);
         fflush(stdout);
     }
-    
+
     if (enablePreview) {
         gotoxy (26 + 28, 5);
         printf ("Preview:");
         fflush(stdout);
     }
-    
+
     gotoxy (26 + 28, 10);
     printf ("Keys:");
     fflush(stdout);
@@ -269,7 +269,7 @@ game_frame(int c)
 {
     int j;
     int *backup;
-    
+
     if (c == 0) {
         if (fits_in (shape, pos + B_COLS)) {
             pos += B_COLS;
@@ -280,7 +280,7 @@ game_frame(int c)
                 for (; board[++j];) {
                     if (j % B_COLS == 10) {
                         linesCleared++;
-                        
+
                         for (; j % B_COLS; board[j--] = 0);
                         update();
                         for (; --j; board[j + B_COLS] = board[j]);
@@ -335,10 +335,22 @@ print_welcome_message(void)
 int
 main()
 {
+    /* Future Work 3:
+       How the selfloader bootstraps user processes needs to be modified further. Changes were
+       made to accomodate the new way that muslc expects process's stacks to be set up when
+       processes start, but the one part of this that still needs to changed is how user processes
+       find their system call table. Currently the selfloader sets up user processes so that
+       the selfloader's system call table is used by user processes by passing the address of the
+       selfloader's system call table to the user processes via the user process's environment
+       variables. Ideally, user processes would use their own system call table.
+    */
+
+    uintptr_t address = strtoll(getenv("SYSTABLE"), NULL, 16);
+    refos_init_selfload_child(address);
     int c, i, *ptr;
     int delay = INITIAL_DELAY_MS;
     refos_initialise();
-    
+
     peekShape = NULL;
 
     /* Initialise board. */
@@ -346,7 +358,7 @@ main()
     for (i = B_SIZE - 1; i>=0; i--) {
         *ptr++ = i < 25 || i % B_COLS < 2 ? A_BG_W : RESETATTR;
     }
-    
+
     srand((unsigned int) RANDOM_SEED);
 
     clrscr();
@@ -378,4 +390,4 @@ main()
 
     gotoxy (0, 25);
     printf("Game over! You reached %d points.\n", points);
-} 
+}

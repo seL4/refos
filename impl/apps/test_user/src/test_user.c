@@ -225,7 +225,7 @@ test_threads(void)
         testThreadCount++;
         sync_release(testThreadMutex);
     }
-    
+
     /* Block and wait for thread exit signal. */
     for(int i = 0; i < TEST_NUMTHREADS; i++) {
         tvprintf("test_threads waiting thread child %d...\n", i);
@@ -284,7 +284,7 @@ static int
 test_filetable_read(void)
 {
     test_start("filetable read");
-    
+
     FILE * testFile = fopen("fileserv/hello.txt", "r");
     test_assert(testFile);
 
@@ -306,7 +306,7 @@ static int
 test_filetable_write(void)
 {
     test_start("filetable write");
-    
+
     FILE * testFile = fopen("fileserv/test_file_abc", "w");
     test_assert(testFile);
     for (int i = 0; i < 32; i++) {
@@ -363,8 +363,20 @@ int
 main()
 {
 #ifdef CONFIG_REFOS_RUN_TESTS
-    refos_initialise();
 
+    /* Future Work 3:
+       How the selfloader bootstraps user processes needs to be modified further. Changes were
+       made to accomodate the new way that muslc expects process's stacks to be set up when
+       processes start, but the one part of this that still needs to changed is how user processes
+       find their system call table. Currently the selfloader sets up user processes so that
+       the selfloader's system call table is used by user processes by passing the address of the
+       selfloader's system call table to the user processes via the user process's environment
+       variables. Ideally, user processes would use their own system call table.
+    */
+
+    uintptr_t address = strtoll(getenv("SYSTABLE"), NULL, 16);
+    refos_init_selfload_child(address);
+    refos_initialise();
     printf("USER_TEST | Hello world!\n");
     printf("USER_TEST | Running RefOS User-level tests.\n");
     test_title = "USER_TEST";

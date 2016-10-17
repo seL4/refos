@@ -18,7 +18,7 @@
 #include "syscalls.h"
 
 /* construct a lookup table of all the syscalls */
-static long (*syscall_table[])(va_list) = {
+long (*syscall_table[])(va_list) = {
 #ifdef __NR_set_thread_area
     [__NR_set_thread_area] = sys_set_thread_area,
 #endif

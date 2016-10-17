@@ -25,6 +25,7 @@
 #include <string.h>
 #include "selfloader.h"
 
+#include <elf/elf.h>
 #include <refos/refos.h>
 #include <refos/share.h>
 #include <refos/vmlayout.h>
@@ -48,6 +49,9 @@ static char slMiniMorecoreRegion[SELFLOADER_MINI_MORECORE_REGION_SIZE];
 
 /*! @brief Selfloader's system call table. */
 extern uintptr_t __vsyscall_ptr;
+
+/*! @brief The spawned process uses this system call table */
+extern long (*syscall_table[])(va_list);
 
 // TODO(xmc): standardise this with a macro.
 /*! Helper function to round up to the next page boundary. */
@@ -312,22 +316,138 @@ sl_setup_bootinfo_buffer(void)
     procInfo->stackRegion = selfloaderState.stackRegion;
 }
 
+/*! @brief Push onto the stack.
+   @param stack_top The current top of the stack.
+   @param buf The buffer to be pushed onto the stack.
+   @param n The size of the buffer to be pushed onto the stack.
+   @return The new top of the stack.
+*/
+static uintptr_t stack_write(uintptr_t stack_top, void *buf, size_t n)
+{
+    uintptr_t new_stack_top = stack_top - n;
+    memcpy((void*)new_stack_top, buf, n);
+    return new_stack_top;
+}
+
+/*! @brief Push a constant onto the stack.
+   @param stack_top The current top of the stack.
+   @param value The value to be pushed onto the stack.
+   @return The new top of the stack.
+*/
+static uintptr_t stack_write_constant(uintptr_t stack_top, long value) {
+    return stack_write(stack_top, &value, sizeof(value));
+}
+
+/*! @brief Push arguments onto the stack.
+   @param stack_top The current top of the stack.
+   @param data_len The number of arguments to push to the stack.
+   @param dest_data Pointer to the arguments to be pushed to the stack.
+   @param dest_data When the function returns contains each of the arguments to be pushed.
+   @return The new top of the stack.
+*/
+static uintptr_t stack_copy_args(uintptr_t stack_top, int data_len, char *data[], uintptr_t *dest_data) {
+    uintptr_t new_stack_top = stack_top;
+    for (int i = 0; i < data_len; i++) {
+        new_stack_top = stack_write(new_stack_top, data[i], strlen(data[i]) + 1);
+        dest_data[i] = new_stack_top;
+        new_stack_top = ROUND_DOWN(new_stack_top, 4);
+    }
+    return new_stack_top;
+}
+
+/*! @brief Initialise the stack for how musllibc expects it.
+   @param elf The mapped ELF header containing entry point to jump into.
+   @param stack_top The current top of the stack.
+   @return The new top of the stack.
+*/
+static uintptr_t system_v_init(char *elf, uintptr_t stack_top)
+{
+    uintptr_t sysinfo = __vsyscall_ptr;
+    void *ipc_buffer = seL4_GetIPCBuffer();
+
+    char ipc_buf_env[ENV_STR_SIZE];
+    snprintf(ipc_buf_env, ENV_STR_SIZE, "IPCBUFFER=%p", ipc_buffer);
+
+    /* Future Work 3:
+       How the selfloader bootstraps user processes needs to be modified further. Changes were
+       made to accomodate the new way that muslc expects process's stacks to be set up when
+       processes start, but the one part of this that still needs to changed is how user processes
+       find their system call table. Currently the selfloader sets up user processes so that
+       the selfloader's system call table is used by user processes by passing the address of the
+       selfloader's system call table to the user processes via the user process's environment
+       variables. Ideally, user processes would use their own system call table.
+    */
+
+    char system_call_table_env[ENV_STR_SIZE];
+    snprintf(system_call_table_env, ENV_STR_SIZE, "SYSTABLE=%x", (unsigned int) syscall_table);
+
+    char *envp[] = {ipc_buf_env, system_call_table_env};
+    int envc = 2;
+    uintptr_t dest_envp[envc];
+    Elf_auxv_t auxv[] = { {.a_type = AT_SYSINFO, .a_un = {sysinfo} } };
+
+    stack_top = stack_copy_args(stack_top, envc, envp, dest_envp);
+
+    size_t stack_size = 5 * sizeof(seL4_Word) + /* constants */
+                        sizeof(dest_envp) + /* aux */
+                        sizeof(auxv[0]); /* env */
+
+    uintptr_t future_stack_top = stack_top - stack_size;
+    uintptr_t rounded_future_stack_top = ROUND_DOWN(future_stack_top, sizeof(seL4_Word) * 2);
+    ptrdiff_t stack_rounding = future_stack_top - rounded_future_stack_top;
+    stack_top -= stack_rounding;
+
+    /* NULL terminate aux */
+    stack_top = stack_write_constant(stack_top, 0);
+    stack_top = stack_write_constant(stack_top, 0);
+
+    /* Write aux */
+    stack_top = stack_write(stack_top, auxv, sizeof(auxv[0]));
+
+    /* NULL terminate env */
+    stack_top = stack_write_constant(stack_top, 0);
+
+    /* Write env */
+    stack_top = stack_write(stack_top, dest_envp, sizeof(dest_envp));
+
+    /* NULL terimnate args (we don't have any) */
+    stack_top = stack_write_constant(stack_top, 0);
+
+    /* Write argument count (we don't have any args) */
+    stack_top = stack_write_constant(stack_top, 0);
+
+    return stack_top;
+}
+
 /*! @brief Jumps into loaded ELF program in current vspace.
    @param file The mapped ELF header containing entry point to jump into.
  */
 static inline void
 sl_elf_start(char *file)
 {
-    dprintf("=============== Jumping into ELF program ==================\n");
     seL4_Word entryPoint = elf_getEntryPoint(file);
     seL4_Word stackPointer = PROCESS_STACK_BOT + PROCESS_RLIMIT_STACK;
+
+    /* Future Work 3:
+       How the selfloader bootstraps user processes needs to be modified further. Changes were
+       made to accomodate the new way that muslc expects process's stacks to be set up when
+       processes start, but the one part of this that still needs to changed is how user processes
+       find their system call table. Currently the selfloader sets up user processes so that
+       the selfloader's system call table is used by user processes by passing the address of the
+       selfloader's system call table to the user processes via the user process's environment
+       variables. Ideally, user processes would use their own system call table.
+    */
+
+    stackPointer = system_v_init(file, stackPointer);
+
+    dprintf("=============== Jumping into ELF program ==================\n");
+
     #ifdef ARCH_ARM
         asm volatile ("mov sp, %0" :: "r" (stackPointer));
         asm volatile ("mov pc, %0" :: "r" (entryPoint));
     #elif defined(ARCH_IA32)
         asm volatile ("movl %0, %%esp" :: "r" (stackPointer));
-        void (*entryPointer)(void) = (void(*)(void)) entryPoint;
-        entryPointer();
+        asm volatile ("jmp %0 " :: "r" (entryPoint));
     #else
         #error "Unknown architecture."
     #endif /* ARCH_ARM */
@@ -339,7 +459,6 @@ faketime() {
     static uint32_t faketime = 0;
     return faketime++;
 }
-
 
 /*! @brief Selfloader main function. */
 int

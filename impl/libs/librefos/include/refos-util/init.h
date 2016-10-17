@@ -55,6 +55,9 @@ typedef struct sl_procinfo_s {
     sl_dataspace_t stackRegion;
 } sl_procinfo_t;
 
+/*! @brief Point the selfloaded process to the parent's system call table. */
+void refos_init_selfload_child(uintptr_t parent_syscall_table_address);
+
 /*! @brief Initialise minimal OS environment, for RefOS low-level OS servers. */
 void refos_initialise_os_minimal(void);
 

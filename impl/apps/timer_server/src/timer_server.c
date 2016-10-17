@@ -116,8 +116,20 @@ uint32_t faketime() {
 
 /*! @brief Main timer server entry point. */
 int
-main(void)
+main()
 {
+    /* Future Work 3:
+       How the selfloader bootstraps user processes needs to be modified further. Changes were
+       made to accomodate the new way that muslc expects process's stacks to be set up when
+       processes start, but the one part of this that still needs to changed is how user processes
+       find their system call table. Currently the selfloader sets up user processes so that
+       the selfloader's system call table is used by user processes by passing the address of the
+       selfloader's system call table to the user processes via the user process's environment
+       variables. Ideally, user processes would use their own system call table.
+    */
+
+    uintptr_t address = strtoll(getenv("SYSTABLE"), NULL, 16);
+    refos_init_selfload_child(address);
     dprintf("Initialising RefOS timer server.\n");
     refosio_setup_morecore_override(timeServMMapRegion, TIMESERV_MMAP_REGION_SIZE);
     refos_initialise();
