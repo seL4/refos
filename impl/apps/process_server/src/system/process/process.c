@@ -19,6 +19,7 @@
 #include <refos/vmlayout.h>
 #include <refos/refos.h>
 #include <refos-rpc/proc_server.h>
+#include <sel4utils/process.h>
 
 #include "../../state.h"
 #include "pid.h"
@@ -230,6 +231,8 @@ proc_config_new(struct proc_pcb *p, uint32_t pid, uint8_t priority, char *imageN
         goto exit2;
     }
 
+    uintptr_t sysInfo = sel4utils_elf_get_vsyscall(imageName);
+
     /* Configure initial thread. Note that we do this after loading the ELF into vspace, to
        avoid potentially clobbering the vspace ELF regions. */
     error = thread_config(thread, priority, (vaddr_t) entryPoint, &p->vspace);
@@ -237,6 +240,32 @@ proc_config_new(struct proc_pcb *p, uint32_t pid, uint8_t priority, char *imageN
         ROS_ERROR("Failed to configure thread for %s.", imageName);
         goto exit2;
     }
+
+    /* Future Work 1:
+       How the process server creates and starts new processes and threads should be modified.
+       Currently the process server creates new processes by creating a 'dummy'
+       sel4utils_process_t structure and then making a call to sel4utils_spawn_process_v()
+       with the sel4utils_process_t structure. The existing vspace, sel4utilsThread and entryPoint
+       are copied into the sel4utils_process_t structure. Instead of using sel4utils_process_t the
+       conventional way, RefOS implements its own structure for managing processes and threads. The
+       RefOS defined proc_pcb structure performs overall the same functionality as the (now existing)
+       sel4utils_process_t which most seL4 projects rely on. Further RefOS work is to modify RefOS
+       so that it does not use its proc_pcb structure and instead uses the sel4utils_process_t structure
+       entirely.
+    */
+    sel4utils_process_t n_process;
+    n_process.vspace = p->vspace.vspace;
+    n_process.thread = thread->sel4utilsThread;
+    n_process.sysinfo = sysInfo;
+    n_process.entry_point = entryPoint;
+
+    error = sel4utils_spawn_process_v(&n_process, &procServ.vka, &procServ.vspace, 0, NULL, 0);
+    if (error) {
+        ROS_ERROR("Failed to spawn process for %s.", imageName);
+        goto exit2;
+    }
+
+    thread->sel4utilsThread = n_process.thread;
 
     /* Add thread to list. */
     dvprintf("Adding to threads list...\n");
@@ -551,6 +580,32 @@ proc_clone(struct proc_pcb *p, int *threadID, vaddr_t stackAddr, vaddr_t entryPo
         ROS_ERROR("Failed to configure thread for new thread.");
         goto exit1;
     }
+
+    /* Future Work 1:
+       How the process server creates and starts new processes and threads should be modified.
+       Currently the process server creates new processes by creating a 'dummy'
+       sel4utils_process_t structure and then making a call to sel4utils_spawn_process_v()
+       with the sel4utils_process_t structure. The existing vspace, sel4utilsThread and entryPoint
+       are copied into the sel4utils_process_t structure. Instead of using sel4utils_process_t the
+       conventional way, RefOS implements its own structure for managing processes and threads. The
+       RefOS defined proc_pcb structure performs overall the same functionality as the (now existing)
+       sel4utils_process_t which most seL4 projects rely on. Further RefOS work is to modify RefOS
+       so that it does not use its proc_pcb structure and instead uses the sel4utils_process_t structure
+       entirely.
+    */
+    sel4utils_process_t n_process;
+    n_process.vspace = p->vspace.vspace;
+    n_process.thread = thread->sel4utilsThread;
+    n_process.sysinfo = 0;
+    n_process.entry_point = (void *) entryPoint;
+
+    error = sel4utils_spawn_process_v(&n_process, &procServ.vka, &procServ.vspace, 0, NULL, 0);
+    if (error) {
+        ROS_ERROR("Failed to spawn process.");
+        goto exit1;
+    }
+
+    thread->sel4utilsThread = n_process.thread;
 
     /* Add thread to list. */
     dvprintf("Adding to threads list...\n");

@@ -15,12 +15,6 @@
 #include "../../common.h"
 #include "../addrspace/vspace.h"
 
-/* Forward declaration here, to work around the assumption by sel4utils_start_thread that the thread
-   stack is in same vspace as the caller. If someone lifts that assumption at some point, this code
-   should be fixed accordingly.
-*/
-int sel4utils_internal_start_thread(sel4utils_thread_t *thread, void *entry_point, void *arg0,
-        void *arg1, int resume, void *local_stack_top, void *dest_stack_top);
 int
 thread_config(struct proc_tcb *thread, uint8_t priority, vaddr_t entryPoint,
                    struct vs_vspace *vspace)
@@ -62,13 +56,20 @@ thread_start(struct proc_tcb *thread, void *arg0, void *arg1)
     assert(thread);
     assert(thread->entryPoint);
 
-    /* Start the thread using seL4utils library. */
-    int error = sel4utils_internal_start_thread (
-            &thread->sel4utilsThread,
-            (void *) thread->entryPoint,
-            arg0, arg1,
-            true, NULL, thread->sel4utilsThread.stack_top
-    );
+    /* Future Work 1:
+       How the process server creates and starts new processes and threads should be modified.
+       Currently the process server creates new processes by creating a 'dummy'
+       sel4utils_process_t structure and then making a call to sel4utils_spawn_process_v()
+       with the sel4utils_process_t structure. The existing vspace, sel4utilsThread and entryPoint
+       are copied into the sel4utils_process_t structure. Instead of using sel4utils_process_t the
+       conventional way, RefOS implements its own structure for managing processes and threads. The
+       RefOS defined proc_pcb structure performs overall the same functionality as the (now existing)
+       sel4utils_process_t which most seL4 projects rely on. Further RefOS work is to modify RefOS
+       so that it does not use its proc_pcb structure and instead uses the sel4utils_process_t structure
+       entirely.
+    */
+    /* Start the thread using seL4_TCB_Resume() */
+    int error = seL4_TCB_Resume(thread->sel4utilsThread.tcb.cptr);
     if (error) {
         ROS_ERROR("sel4utils_start_thread failed. error: %d.", error);
         return EINVALID;
