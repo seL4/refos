@@ -67,6 +67,8 @@ The following is suggested future work that interested open-source developers co
  * Future Work 3: modify how the selfloader bootstraps user processes (see 'Future Work 3' in code)
  * Future Work 4: remove explicit reference to system call table in processes that the process server creates (see 'Future Work 4' in code)
  * Future Work 5: set up muslc's errno in RefOS (see 'Future Work 5' in code)
+ * Future Work 6: get ia32_screen_debug_defconfig and ia32_screen_release_defconfig default configurations running with new seL4 API
+ * Future Work 7: get Nethack running with new seL4 API
 
 License
 -------
