@@ -15,7 +15,6 @@ TARGETS := terminal.bin
 
 # Source files required to build the target
 CFILES   := $(patsubst $(SOURCE_DIR)/%,%,$(wildcard $(SOURCE_DIR)/src/*.c))
-ASMFILES := $(patsubst $(SOURCE_DIR)/%,%,$(wildcard $(SOURCE_DIR)/crt/arch-${ARCH}/crt0.S))
 
 NK_CFLAGS += -O2 -D_XOPEN_SOURCE=700
 
