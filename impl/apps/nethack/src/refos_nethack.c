@@ -1,8 +1,8 @@
 /* Nethack as a whole is licensed under a GPL license.
    Please refer to LICENSE_GPL.txt for details.
 
-   Source files were modified to be compatible with the RefOS build system, and to disable features
-   that RefOS didn't fully support.
+   Source files were modified to be compatible with the RefOS build system and to disable features
+   that RefOS didn't fully support. Changes occurred on October 24, 2014.
 */
 
 #include <stdio.h>
