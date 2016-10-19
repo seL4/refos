@@ -37,7 +37,7 @@ void cvector_init(cvector_t *v);
 
 int cvector_add(cvector_t *v, cvector_item_t e);
 
-inline size_t cvector_count(cvector_t *v) {
+static inline size_t cvector_count(cvector_t *v) {
     return v->count;
 }
 
