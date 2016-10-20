@@ -14,12 +14,12 @@
     @brief Top-level main module for process server.
 
     The top level main module of the process server, containing the main function which runs as
-    the initial kernel thread. Starts up the process server, bootstraps itself, initialises the
-    submodules, and and starts the rest of system.
+    the initial kernel thread. This function starts up the process server, bootstraps itself, initialises the
+    submodules, and starts the rest of system.
 
-    The process server is responsible for implementing threads & processes, manage memory window
-    segments, expose anon memory dataspaces, and hand off other system resources to the system
-    processes available (such as device and IRQ caps device servers).
+    The process server is responsible for implementing threads and processes, managing memory window
+    segments, exposing anonymous memory dataspaces, and handing off other system resources to the available system
+    processes (such as device and IRQ caps device servers).
 
     @image html procserv.png
 
@@ -28,7 +28,7 @@
         <li>Assumes the connection session is set up, so therefore does not support connection
             establishment.</li>
         <li>Ignores the fileName parameter of the open method; makes no sense for anon memory.</li>
-        <li>Reads the nBytes parameter of the open method, as the max. size of the ram dataspace
+        <li>Reads the nBytes parameter of the open method, as the maximum size of the ram dataspace
             created. </li>
         <li>Does NOT implement set_parambuffer, it shares the parambuffer from procserv interface
             and reads that instead. </li>
