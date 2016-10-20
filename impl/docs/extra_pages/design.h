@@ -44,7 +44,7 @@ The main goal of the data server interface is to provide dataspace abstraction. 
 @section Startup
 @image html startup.png "Figure 2 - RefOS Boot Protocol"
 
-In the RefOS boot protocol, the process server is started and initialises itself. Once the process server is running, the process server uses its interal ELF loader to start the file server and then starts the selfloader.
+In the RefOS boot protocol, the process server is started and initialises itself. Once the process server is running, the process server uses its interal ELF loader to start the console server, the file server and then the selfloader.
 
 @image html elfload.png "Figure 3 - ELF Loading"
 
