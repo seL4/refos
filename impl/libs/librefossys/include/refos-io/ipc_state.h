@@ -34,9 +34,9 @@ refosio_internal_save_IPC_buffer(void)
     seL4_Word *dest = (seL4_Word *) ipcBuf;
     for (int i = 0; i < sizeof(seL4_IPCBuffer) / sizeof(seL4_Word); i++) {
         #ifdef CONFIG_X86_64
-            asm volatile ("movq %%gs:0(,%1,0x8), %0" : "=r"(*(dest + i)) : "r"(i) : "memory");
+            asm volatile ("movq %%fs:0(,%1,0x8), %0" : "=r"(*(dest + i)) : "r"(i) : "memory");
         #else
-            asm volatile ("movl %%gs:0(,%1,0x4), %0" : "=r"(*(dest + i)) : "r"(i) : "memory");
+            asm volatile ("movl %%fs:0(,%1,0x4), %0" : "=r"(*(dest + i)) : "r"(i) : "memory");
         #endif
     }
 #else
@@ -57,9 +57,9 @@ refosio_internal_restore_IPC_buffer(void)
     seL4_Word *src = (seL4_Word *) ipcBuf;
     for (int i = 0; i < sizeof(seL4_IPCBuffer) / sizeof(seL4_Word); i++) {
     #ifdef CONFIG_X86_64
-            asm volatile ("movq %0, %%gs:0(,%1,0x8)" :: "r"(*(src + i)), "r"(i) : "memory");
+            asm volatile ("movq %0, %%fs:0(,%1,0x8)" :: "r"(*(src + i)), "r"(i) : "memory");
     #else
-            asm volatile ("movl %0, %%gs:0(,%1,0x4)" :: "r"(*(src + i)), "r"(i) : "memory");
+            asm volatile ("movl %0, %%fs:0(,%1,0x4)" :: "r"(*(src + i)), "r"(i) : "memory");
     #endif
     }
 #else
