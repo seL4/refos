@@ -28,7 +28,7 @@ int
 check_dispatch_interface(struct procserv_msg *m, void **userptr, int labelMin, int labelMax)
 {
     assert(userptr);
-    if (seL4_MessageInfo_get_label(m->message) != seL4_NoFault ||
+    if (seL4_MessageInfo_get_label(m->message) != seL4_Fault_NullFault ||
             !dispatcher_badge_PID(m->badge)) {
         /* Not a Syscall, pass onto next dispatcher. */
         return DISPATCH_PASS;

@@ -341,7 +341,7 @@ handle_vm_fault(struct procserv_msg *m, struct procserv_vmfault_msg *f)
 
 int
 check_dispatch_fault(struct procserv_msg *m, void **userptr) {
-    if (seL4_MessageInfo_get_label(m->message) != seL4_VMFault ||
+    if (seL4_MessageInfo_get_label(m->message) != seL4_Fault_VMFault ||
             !dispatcher_badge_PID(m->badge)) {
         /* Not a VM fault, pass onto next dispatcher. */
         return DISPATCH_PASS;
@@ -369,10 +369,10 @@ dispatch_vm_fault(struct procserv_msg *m, void **userptr) {
     /* Fill out the VM fault message info structure. */
     struct procserv_vmfault_msg vmfault;
     vmfault.pcb = pcb;
-    vmfault.pc = seL4_PF_FIP();
-    vmfault.faultAddr = seL4_PF_Addr();
-    vmfault.instruction = seL4_GetMR(SEL4_PFIPC_PREFETCH_FAULT);
-    vmfault.fsr = seL4_GetMR(SEL4_PFIPC_FSR);
+    vmfault.pc = seL4_GetMR(seL4_VMFault_IP);
+    vmfault.faultAddr = seL4_GetMR(seL4_VMFault_Addr);
+    vmfault.instruction = seL4_GetMR(seL4_VMFault_PrefetchFault);
+    vmfault.fsr = seL4_GetMR(seL4_VMFault_FSR);
     vmfault.read = sel4utils_is_read_fault();
 
     /* Handle the VM fault. */
