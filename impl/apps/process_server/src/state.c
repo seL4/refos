@@ -217,7 +217,7 @@ procserv_mint_badge(int badge)
     }
     vka_cspace_make_path(&procServ.vka, procServ.endpoint.cptr, &pathSrc);
     error = vka_cnode_mint(
-            &path, &pathSrc, seL4_CanGrant | seL4_CanWrite,
+            &path, &pathSrc, seL4_NoRead,
             seL4_CapData_Badge_new(badge)
     );
     if (error) {

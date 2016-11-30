@@ -28,7 +28,7 @@ int
 check_dispatch_interface(srv_msg_t *m, void **userptr, int labelMin, int labelMax)
 {
     assert(userptr);
-    if (seL4_MessageInfo_get_label(m->message) != seL4_NoFault) {
+    if (seL4_MessageInfo_get_label(m->message) != seL4_Fault_NullFault) {
         /* Not a Syscall, pass onto next dispatcher. */
         return DISPATCH_PASS;
     }

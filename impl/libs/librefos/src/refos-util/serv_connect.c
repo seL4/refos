@@ -50,7 +50,7 @@ client_oat_create(coat_t *oat, int id, uint32_t arg[COAT_ARGS])
     int error = seL4_CNode_Mint (
             REFOS_CSPACE, nclient->session, REFOS_CDEPTH,
             REFOS_CSPACE, ct->sessionSrcEP, REFOS_CDEPTH,
-            seL4_CanWrite | seL4_CanGrant,
+            seL4_NoRead,
             seL4_CapData_Badge_new(nclient->cID + ct->badgeBase)
     );
     if (error != seL4_NoError) {

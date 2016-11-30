@@ -87,7 +87,7 @@ exit0:
 }
 
 static void
-proc_pass_badge(struct proc_pcb *p, seL4_CPtr destCSlot, seL4_CPtr ep, seL4_CapRights rights,
+proc_pass_badge(struct proc_pcb *p, seL4_CPtr destCSlot, seL4_CPtr ep, seL4_CapRights_t rights,
                 seL4_CapData_t badge)
 {
     cspacepath_t pathSrc, pathDest;
@@ -106,7 +106,7 @@ proc_pass_badge(struct proc_pcb *p, seL4_CPtr destCSlot, seL4_CPtr ep, seL4_CapR
 }
 
 static void
-proc_copy_badge(struct proc_pcb *p, seL4_CPtr destCSlot, seL4_CPtr ep, seL4_CapRights rights)
+proc_copy_badge(struct proc_pcb *p, seL4_CPtr destCSlot, seL4_CPtr ep, seL4_CapRights_t rights)
 {
     cspacepath_t pathSrc, pathDest;
     vka_cspace_make_path(&procServ.vka, ep, &pathSrc);
@@ -134,14 +134,14 @@ proc_setup_environment(struct proc_pcb *p, char *param)
     /* Tell the process about ourself, the process server. */
     proc_pass_badge (
             p, REFOS_PROCSERV_EP, procServ.endpoint.cptr,
-            seL4_CanWrite | seL4_CanGrant, 
+            seL4_NoRead,
             seL4_CapData_Badge_new(pid_get_badge(p->pid))
     );
 
     /* Tell the process about its own liveness cap. */
     proc_pass_badge (
             p, REFOS_LIVENESS, procServ.endpoint.cptr,
-            seL4_CanWrite | seL4_CanGrant, 
+            seL4_NoRead,
             seL4_CapData_Badge_new(pid_get_liveness_badge(p->pid))
     );
 

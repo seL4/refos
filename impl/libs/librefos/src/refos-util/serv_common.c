@@ -249,7 +249,7 @@ srv_mint(int badge, seL4_CPtr ep)
     int error = seL4_CNode_Mint (
         REFOS_CSPACE, mintEP, REFOS_CDEPTH,
         REFOS_CSPACE, ep, REFOS_CDEPTH,
-        seL4_CanWrite | seL4_CanGrant,
+        seL4_NoRead,
         seL4_CapData_Badge_new(badge)
     );
     if (error != seL4_NoError) {

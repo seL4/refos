@@ -177,15 +177,15 @@ struct w_window* w_get_window(struct w_list *wlist, int windowID);
     @param permission Window permission bitmask.
     @return corresponding seL4_CapRights to given window permission bitmask.
 */
-static inline seL4_CapRights
+static inline seL4_CapRights_t
 w_convert_permission_to_caprights(seL4_Word permission)
 {
-    seL4_CapRights capr = seL4_CanGrant;
+    seL4_CapRights_t capr = seL4_CanGrant;
     if (permission | W_PERMISSION_WRITE) {
-        capr |= seL4_CanWrite;
+        capr = seL4_CapRights_set_capAllowWrite(capr, seL4_True);
     }
     if (permission | W_PERMISSION_READ) {
-        capr |= seL4_CanRead;
+        capr = seL4_CapRights_set_capAllowRead(capr, seL4_True);
     }
     return capr;
 }
