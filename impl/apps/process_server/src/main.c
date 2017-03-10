@@ -45,6 +45,8 @@
 #include <stdlib.h>
 #include <assert.h>
 
+#include <sel4platsupport/bootinfo.h>
+
 #include "common.h"
 #include "state.h"
 #include "test/test.h"
@@ -137,7 +139,7 @@ proc_server_loop(void)
 int
 main(void)
 {
-    initialise(seL4_GetBootInfo(), &procServ);
+    initialise(platsupport_get_bootinfo(), &procServ);
     dprintf("======== RefOS Process Server ========\n");
 
     // -----> Run Root Task Testing.
