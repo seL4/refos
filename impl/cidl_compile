@@ -186,8 +186,8 @@ def process(filename, client, header, disp, pre_process, dbg):
             continue
         dct_root['func_list'].append(process_function(x, template_str, dct_root, dbg))
         dct_root['enum_list'].append(process_function(x, template_enum, dct_root, dbg))
-    print TITLE_MESSAGE
-    print tempita.Template(template_root).substitute(dct_root)
+    print(TITLE_MESSAGE)
+    print(tempita.Template(template_root).substitute(dct_root))
 
 parser = argparse.ArgumentParser(description = DESCRIPTION)
 parser.add_argument('-r', '--header', action='store_true',\
