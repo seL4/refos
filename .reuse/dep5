@@ -1,0 +1,30 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: seL4
+Upstream-Contact: seL4 team <seL4@sel4.systems>
+Source: http://sel4.systems
+
+Files:
+  impl/apps/nethack/src/nethack-3.4.3/*
+  impl/apps/file_server/files/nethackrc
+  impl/apps/file_server/files/nhdat
+  impl/apps/file_server/files/hh
+Copyright: 1989 M. Stephenson
+License: NGPL
+
+Files:
+  impl/docs/doxygen/*.png
+  design/refos.png
+  design/extra.bib
+  impl/apps/file_server/files/hello.txt
+  impl/apps/file_server/files/news
+Copyright: 2016 Data61, CSIRO (ABN 41 687 119 230)
+License: CC-BY-SA-4.0
+
+Files:
+  impl/configs/*
+Copyright: 2016 Data61, CSIRO (ABN 41 687 119 230)
+License: BSD-2-Clause
+
+Files: impl/libs/libvterm/* impl/apps/file_server/files/license
+Copyright: 2008 Paul Evans <leonerd@leonerd.org.uk>
+License: MIT
