@@ -1,5 +1,7 @@
-/* Nethack as a whole is licensed under a GPL license.
-   Please refer to LICENSE_GPL.txt for details.
+/* Nethack as a whole is licensed under the NGPL license.
+
+   SPDX-License-Identifier: NGPL
+   Copyright 2014, NICTA
 
    Source files were modified to be compatible with the RefOS build system and to disable features
    that RefOS didn't fully support. Changes occurred on October 24, 2014.

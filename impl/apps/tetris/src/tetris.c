@@ -20,6 +20,8 @@
  * page at IOCCC http://www.ioccc.org/1989/tromp.hint
  */
 
+// SPDX-License-Identifier: ISC
+
 /*! @file
     @brief RefOS port of Micro Tetris.
 

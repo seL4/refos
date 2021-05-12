@@ -15,6 +15,8 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+// SPDX-License-Identifier: ISC
+
 #ifndef _TETRIS_IO_H_
 #define _TETRIS_IO_H_
 
