@@ -46,7 +46,7 @@ The repository is organised as follows.
     * [`librefos`](impl/libs/librefos/): RefOS user and server shared definitions, RPC specifications and
       generated stubs and low level helper libraries.
     * [`librefossys`](impl/libs/librefossys/): RefOS library that implements some POSIX system calls using low-level
-      RefOS and thus allows the C library to work. This directory is intended to simplify RefOS 
+      RefOS and thus allows the C library to work. This directory is intended to simplify RefOS
       userland applications and facilitate porting.
  * [`impl/docs`](impl/docs/): RefOS doxygen code documentation.
  * [`design`](design/): RefOS protocol design document.
@@ -67,10 +67,9 @@ The following is suggested future work that interested open-source developers co
 License
 -------
 
-The files in this repository are released under standard open source
-licenses. RefOS code is released under the BSD license where possible and GPL for some
+RefOS code is released under the BSD license where possible and GPL for some
 external software. Please see the individual file headers and
-[`LICENSE_BSD2.txt`](LICENSE_BSD2.txt) for details.
+[`LICENSE.md`](LICENSE.md) for details.
 
 Please note that RefOS is intended to be sample code and is not high assurance software.
 We are not reponsible for any consequences if you choose to deploy this software in
